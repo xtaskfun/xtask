@@ -1,6 +1,9 @@
 import { createHash, randomBytes } from "crypto";
 
-export const X_SCOPES = ["tweet.read", "users.read", "follows.read", "like.read", "offline.access"];
+// X_OAUTH_SCOPES (space separated) can override this, e.g. to debug a login with fewer permissions.
+export const X_SCOPES = (process.env.X_OAUTH_SCOPES || "tweet.read users.read follows.read like.read offline.access")
+  .split(/\s+/)
+  .filter(Boolean);
 // Overridable only so the whole flow can be tested against a local mock of X.
 const AUTHORIZE_URL = process.env.X_AUTHORIZE_URL || "https://x.com/i/oauth2/authorize";
 export const X_API = process.env.X_API_BASE_URL || "https://api.x.com/2";
