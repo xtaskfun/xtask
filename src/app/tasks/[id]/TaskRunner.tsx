@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWriteContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BaseError } from "viem";
@@ -12,7 +12,14 @@ import { VERIFICATION_MODE } from "@/lib/site";
 
 const CHECK_ON_X = VERIFICATION_MODE === "x";
 
-type Status = "todo" | "done" | "missing";
+type Status = "todo" | "waiting" | "done" | "missing";
+
+/** Without X verification: after "Go", give the user time to do the action on X. */
+const WAIT_SECONDS = 10;
+
+function Spinner() {
+  return <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" aria-hidden />;
+}
 
 export function errMsg(e: unknown) {
   if (e instanceof BaseError) return e.shortMessage;
@@ -27,6 +34,30 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
 
   const x = useXSession();
   const [status, setStatus] = useState<Record<string, Status>>({});
+  // When each waiting step finishes (ms timestamp), and a ticking clock for the countdown.
+  const [waitUntil, setWaitUntil] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(() => Date.now());
+  const waiting = Object.keys(waitUntil).length > 0;
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(() => {
+      const n = Date.now();
+      setNow(n);
+      const finished = Object.entries(waitUntil).filter(([, until]) => until <= n).map(([a]) => a);
+      if (finished.length) {
+        setStatus((s) => ({ ...s, ...Object.fromEntries(finished.map((a) => [a, "done" as Status])) }));
+        setWaitUntil((w) => Object.fromEntries(Object.entries(w).filter(([a]) => !finished.includes(a))));
+      }
+    }, 250);
+    return () => clearInterval(t);
+  }, [waiting, waitUntil]);
+
+  const startWaiting = (a: TaskAction) => {
+    if (CHECK_ON_X || status[a] === "done" || waitUntil[a]) return;
+    setNow(Date.now());
+    setStatus((s) => ({ ...s, [a]: "waiting" }));
+    setWaitUntil((w) => ({ ...w, [a]: Date.now() + WAIT_SECONDS * 1000 }));
+  };
   const [busy, setBusy] = useState<"verify" | "claim" | "refund" | null>(null);
   const [error, setError] = useState("");
   const [demoClaimed, setDemoClaimed] = useState(false);
@@ -196,11 +227,19 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
                   st === "done" ? "bg-rainbow font-bold text-black" : st === "missing" ? "bg-red-500/20 text-red-400" : "bg-white/10"
                 }`}
               >
-                {st === "done" ? "✓" : st === "missing" ? "!" : i + 1}
+                {st === "done" ? "✓" : st === "missing" ? "!" : st === "waiting" ? <Spinner /> : i + 1}
               </span>
               <div>
                 <div className="font-medium">{ACTION_META[a].icon} {ACTION_META[a].label}</div>
-                <div className="text-xs text-muted">{st === "missing" ? "Not found on X yet" : task.creator}</div>
+                <div className="text-xs text-muted">
+                  {st === "missing"
+                    ? "Not found on X yet"
+                    : st === "waiting"
+                      ? `Waiting for you to finish on X… ${Math.max(0, Math.ceil(((waitUntil[a] ?? now) - now) / 1000))}s`
+                      : st === "done" && !CHECK_ON_X
+                        ? "Done"
+                        : task.creator}
+                </div>
               </div>
             </div>
             <a
@@ -209,16 +248,16 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
               rel="noreferrer noopener"
               className="btn-ghost px-4 py-2"
               // Without X verification, opening each step on X is what unlocks Claim.
-              onClick={() => !CHECK_ON_X && setStatus((s) => ({ ...s, [a]: "done" }))}
+              onClick={() => startWaiting(a)}
             >
-              {st === "done" && !CHECK_ON_X ? "Opened" : "Go"}
+              {st === "waiting" ? "Open again" : "Go"}
             </a>
           </div>
         );
       })}
 
       {!CHECK_ON_X && !allDone && !claimed && (
-        <p className="text-center text-xs text-muted">Open every step on X and complete it — then claim your reward.</p>
+        <p className="text-center text-xs text-muted">Tap Go, complete the step on X, then come back — Claim unlocks when every step is done.</p>
       )}
 
       {CHECK_ON_X && !allDone && !claimed && (
