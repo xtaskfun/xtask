@@ -64,9 +64,15 @@ export async function verifyForTask(store: Store, session: XSession, escrow: Esc
   try {
     result = await verifyActions(makeXApi(session.accessToken), session.id, target, meta.actions);
   } catch (e) {
-    if (e instanceof XApiError && e.status === 429) throw new HttpError(429, "X is rate limiting checks. Try again in a few minutes.");
-    if (e instanceof XApiError && (e.status === 401 || e.status === 403))
-      throw new HttpError(401, "X access expired. Please reconnect your X account.");
+    if (e instanceof XApiError) {
+      const why = e.detail ? ` (${e.detail})` : "";
+      if (e.status === 429) throw new HttpError(429, "X is rate limiting checks. Try again in a few minutes.");
+      if (e.status === 401) throw new HttpError(401, "X access expired. Please reconnect your X account.");
+      if (e.status === 402) throw new HttpError(502, `X API plan or credits don't cover this check (402)${why}.`);
+      if (e.status === 403) throw new HttpError(502, `X API refused the check (403)${why}.`);
+      throw new HttpError(502, `X API error ${e.status}${why}.`);
+    }
+    console.error("verify failed", e);
     throw new HttpError(502, "Couldn't reach X. Try again shortly.");
   }
   if (result.ok) await store.set(keys.verified(escrow, taskId, session.id), "1", VERIFIED_TTL);

@@ -5,15 +5,32 @@ import type { XTarget } from "../x/target";
 export type XApi = (path: string) => Promise<any>;
 
 export class XApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public detail = "") {
     super(message);
+  }
+}
+
+/** Pulls X's own explanation out of an error response (v2 problem+json or v1-style errors). */
+async function xErrorDetail(res: Response) {
+  try {
+    const body = await res.json();
+    const parts = [body.title, body.detail, body.reason, body.errors?.[0]?.message, body.error_description, body.error]
+      .filter((p) => typeof p === "string" && p.trim());
+    return [...new Set(parts)].join(" — ").slice(0, 240);
+  } catch {
+    return "";
   }
 }
 
 export function makeXApi(accessToken: string, base = process.env.X_API_BASE_URL || "https://api.x.com/2"): XApi {
   return async (path) => {
     const res = await fetch(base + path, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
-    if (!res.ok) throw new XApiError(res.status, `X API ${path.split("?")[0]} → ${res.status}`);
+    if (!res.ok) {
+      const detail = await xErrorDetail(res);
+      // Shows up in Vercel → Logs; the path never contains secrets
+      console.error(`X API ${path.split("?")[0]} → ${res.status} ${detail}`);
+      throw new XApiError(res.status, `X API ${path.split("?")[0]} → ${res.status}`, detail);
+    }
     return res.json();
   };
 }
