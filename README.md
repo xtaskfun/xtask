@@ -1,107 +1,163 @@
 # xtask.fun
 
-Platform task X (Twitter): user mengerjakan task (follow, like, repost, reply, quote) dan dapat reward crypto; project bisa membuat & mendanai campaign.
+**Engage on X. Earn onchain.**
+
+xtask.fun is a social task platform. Projects fund a campaign that asks people to follow,
+like, repost, reply to or quote on X. Each person who completes the task claims
+**1% of the reward pool** straight from a smart contract.
+
+- Website: https://xtask-zeta.vercel.app
+- X: [@Xtaskfun](https://x.com/Xtaskfun)
+
+## Features
+
+- **Create a task** — paste an X link, pick the actions, choose a network and token, deposit the pool.
+  The title is generated automatically (e.g. "Follow + Like @Xtaskfun").
+- **Do tasks & claim** — connect a wallet, open each step on X, claim 1% of the pool.
+- **Escrow smart contract** — funds are held by the contract, not by xtask. 100 slots per task,
+  one claim per wallet, unclaimed slots refundable to the creator after the task ends (30 days).
+- **Multi-chain** — Base and Robinhood Chain (plus Base Sepolia for testing).
+- **Many wallets** — MetaMask, OKX, Trust, Coinbase, WalletConnect, Phantom, Rabby, Bitget,
+  Binance, Rainbow, Zerion, Safe, Ledger and any browser wallet (RainbowKit).
+- **Optional X verification** — X login (OAuth 2.0) and checks through the X API.
 
 ## Stack
-- Next.js 15 (App Router) + TypeScript + Tailwind CSS
-- RainbowKit + wagmi + viem — connect wallet dengan banyak pilihan:
-  MetaMask, OKX, Trust, Coinbase, WalletConnect, Phantom, Rabby, Bitget, Binance, Rainbow, Zerion, Safe, Ledger, browser wallet
-- Chain: Base, Ethereum, Arbitrum, Optimism, Polygon, BNB Chain
 
-## Menjalankan
+- Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
+- RainbowKit, wagmi, viem
+- Solidity 0.8.24 + OpenZeppelin, Hardhat
+- Upstash Redis (only for X verification mode)
+- Vitest
+
+## Getting started
+
 ```bash
-cp .env.example .env.local   # isi NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID dari https://cloud.reown.com
+cp .env.example .env.local   # set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID (free at https://cloud.reown.com)
 npm install
 npm run dev
 ```
-Buka http://localhost:3000
 
-## Struktur
+Open http://localhost:3000. Without an escrow address the site runs in **demo mode** with sample tasks.
+
+## Project structure
+
 ```
 src/
   app/
-    page.tsx              # Home (hero, stats, trending, how it works)
-    tasks/page.tsx        # Daftar task + search, filter, sort
-    tasks/[id]/           # Detail task + langkah verify & claim
-    create/page.tsx       # Form buat task + live preview + ringkasan biaya
-  components/             # Navbar (+ bottom nav mobile), TaskCard, Footer, Providers
+    page.tsx              Home
+    tasks/page.tsx        Task list (search, filters, sort)
+    tasks/[id]/           Task detail: steps, claim, refund
+    create/page.tsx       Create a task (live preview)
+    deploy/page.tsx       Deploy the escrow from your wallet
+    api/claim/            Signs claims for the escrow
+    api/verify/           X verification (mode "x")
+    api/auth/x/           X login (mode "x")
+    api/health/           Setup check
+  components/             Navbar, TaskCard, XAvatar, ...
   lib/
-    wagmi.ts              # Daftar wallet & chain
-    tasks.ts              # Tipe data + data demo
-    escrow.ts, tokens.ts  # Alamat contract, chain & daftar token
-    useTasks.ts           # Baca task dari contract
-  app/api/claim/          # Server: verifikasi + tanda tangan claim
-contracts/                # Smart contract escrow (Hardhat)
+    chains.ts             Supported networks (incl. Robinhood Chain)
+    escrow.ts             Escrow addresses per network
+    tokens.ts             Reward tokens per network
+    useTasks.ts           Reads tasks from the contracts
+    server/               Sessions, X API checks, storage
+contracts/                XTaskEscrow smart contract (Hardhat)
+tests/                    Unit tests
 ```
 
-## Pembayaran (escrow)
-Dana task disimpan di smart contract `contracts/contracts/XTaskEscrow.sol`:
-- Pembuat task menyetor pool → dibagi 100 slot, tiap orang claim **1% dari pool**.
-- Setelah mengerjakan task, user klik **Claim** → server (`/api/claim`) memverifikasi lalu
-  memberi tanda tangan → user claim langsung dari contract.
-- Setelah task berakhir, slot yang tidak di-claim bisa di-refund ke pembuat.
+## How payments work
 
-Cara deploy & env lengkap: lihat [`contracts/README.md`](contracts/README.md).
-Selama `NEXT_PUBLIC_ESCROW_ADDRESS` belum diisi, situs memakai data demo.
+The escrow contract is [`contracts/contracts/XTaskEscrow.sol`](contracts/contracts/XTaskEscrow.sol).
 
-## Jaringan (multi-chain)
-Satu kontrak escrow per jaringan, semuanya memakai **signer yang sama**. Isi env sesuai jaringan yang dipakai:
+1. **Create** — the creator deposits the pool (ERC20 or native ETH). It must split into exactly
+   100 slots, so each person gets 1%.
+2. **Claim** — the site asks `/api/claim` for a signature (EIP-712) made by the **signer** key,
+   then the user calls `claim()` and receives 1% from the contract. One claim per wallet,
+   max 100 claims, signatures expire after 10 minutes.
+3. **Refund** — after the task ends, the creator calls `refund()` to get the unclaimed slots back.
 
-| Jaringan | Env |
+The contract owner can only change the signer address. It cannot move anyone's pool.
+See [`contracts/README.md`](contracts/README.md) for details and deployment.
+
+## Networks
+
+One escrow per network, all using the **same signer**. Set the env for each network you use:
+
+| Network | Env |
 |---|---|
-| Base | `NEXT_PUBLIC_ESCROW_ADDRESS` + `NEXT_PUBLIC_ESCROW_CHAIN_ID=8453` (atau `NEXT_PUBLIC_ESCROW_ADDRESS_BASE`) |
+| Base (8453) | `NEXT_PUBLIC_ESCROW_ADDRESS` + `NEXT_PUBLIC_ESCROW_CHAIN_ID=8453`, or `NEXT_PUBLIC_ESCROW_ADDRESS_BASE` |
 | Robinhood Chain (4663) | `NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD` |
-| Base Sepolia (testnet) | `NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA` |
+| Base Sepolia (84532) | `NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA` |
 
-Deploy lewat `/deploy` — halaman itu otomatis memakai signer dari kontrak yang sudah ada.
+The easiest way to deploy is the `/deploy` page: connect your wallet, pick a network, deploy.
+When an escrow already exists, the page reuses its signer automatically.
 
-Daftar token ada di `src/lib/tokens.ts`. Halaman Create mengecek `symbol()` & `decimals()` setiap token
-langsung di blockchain dan menonaktifkan token yang tidak cocok (pengaman jika alamat salah).
+Reward tokens are listed in [`src/lib/tokens.ts`](src/lib/tokens.ts). The create page reads
+`symbol()` and `decimals()` of each token on-chain and disables any token that doesn't match —
+a guard against a wrong address.
 
-## Mode verifikasi
-Diatur lewat env `NEXT_PUBLIC_VERIFICATION_MODE`:
+Check your setup at `/api/health`. It shows whether the server's signer matches every escrow
+(only public addresses are shown, never a key).
 
-| Nilai | Alur |
+## Verification modes
+
+Set with `NEXT_PUBLIC_VERIFICATION_MODE`:
+
+| Value | Flow |
 |---|---|
-| *(kosong)* / `none` — **default** | Connect wallet → buka tiap langkah lewat tombol **Go** → **Claim**. **Tidak ada pengecekan**: siapa pun bisa claim 1x per wallet. |
-| `x` | Wajib login X, aksi dicek lewat X API (butuh app X Developer, lihat di bawah). |
+| empty / `none` (default) | Connect wallet → open each step with **Go** → **Claim**. **No check**: anyone can claim once per wallet. |
+| `x` | X login required; actions are checked through the X API. |
 
-⚠️ Mode `none` tidak bisa membedakan orang yang benar-benar mengerjakan task. Bot dengan
-banyak wallet bisa menghabiskan pool. Kontrak tetap membatasi 1 claim per wallet & 100 slot.
+> ⚠️ Mode `none` cannot tell whether someone really did the task. Someone with many wallets
+> can drain a pool. The contract still limits claims to one per wallet and 100 per task.
+> Start with small pools.
 
-## Login X & verifikasi (mode `x`)
-User login dengan akun X (OAuth 2.0). Saat klik **verify** / **Claim**, server mengecek lewat X API:
+### X verification (mode `x`)
 
-| Aksi | Dicek dari |
+Users log in with X (OAuth 2.0). On **verify** / **claim** the server checks:
+
+| Action | Checked against |
 |---|---|
-| Follow | daftar following user (sampai 5.000 akun) |
-| Like | 200 like terakhir user |
-| Repost / Reply / Quote | 200 post terakhir user |
+| Follow | the user's following list (up to 5,000 accounts) |
+| Like | the user's last 200 likes |
+| Repost / Reply / Quote | the user's last 200 posts |
 
-Aturan anti-curang:
-- 1 akun X hanya bisa claim **sekali per task** (disimpan di Redis), 1 wallet juga sekali (di contract)
-- opsional: minimal umur akun X (`X_MIN_ACCOUNT_AGE_DAYS`) & minimal follower (`X_MIN_FOLLOWERS`), default 0 = tanpa syarat
+Anti-abuse: one X account can claim a task only once (stored in Redis). Optional minimum
+account age (`X_MIN_ACCOUNT_AGE_DAYS`) and followers (`X_MIN_FOLLOWERS`), both 0 by default.
 
-### Setup
-1. **X Developer:** buka developer.x.com → buat Project + App → *User authentication settings*:
-   - App permissions: **Read**
-   - Type of App: **Web App (confidential client)**
-   - Callback URI: `https://DOMAIN-KAMU/api/auth/x/callback` (harus sama persis dengan `NEXT_PUBLIC_SITE_URL`)
-   - Website URL: `https://DOMAIN-KAMU`
-   
-   Lalu salin **OAuth 2.0 Client ID & Client Secret**. Paket API X harus mengizinkan
-   endpoint *follows*, *likes* dan *user timeline* (cek harga di developer.x.com).
-2. **Database:** di Vercel → *Storage* → buat **Upstash Redis** dan hubungkan ke project
-   (env `KV_REST_API_URL` / `KV_REST_API_TOKEN` terisi otomatis).
-3. **Env di Vercel:** `X_CLIENT_ID`, `X_CLIENT_SECRET`, `SESSION_SECRET` (acak 32+ karakter),
-   `NEXT_PUBLIC_SITE_URL`. Lihat `.env.example` untuk semua opsi.
-4. Redeploy.
+Setup:
 
-## Test
+1. On developer.x.com create a Project + App. Under *User authentication settings* choose
+   **Read** permissions, **Web App** type, and set the callback URL to
+   `https://YOUR-DOMAIN/api/auth/x/callback`. Your X API plan must include the follows,
+   likes and user timeline endpoints.
+2. Add an **Upstash Redis** database (e.g. Vercel → Storage). `KV_REST_API_URL` /
+   `KV_REST_API_TOKEN` are picked up automatically.
+3. Set `X_CLIENT_ID`, `X_CLIENT_SECRET`, `SESSION_SECRET` (random, 32+ characters) and
+   `NEXT_PUBLIC_SITE_URL`. See [`.env.example`](.env.example) for all options.
+
+> Rewarding follows, likes or reposts may conflict with X's platform rules. Review X's
+> developer and automation policies before enabling this mode.
+
+## Environment variables
+
+See [`.env.example`](.env.example). The minimum for a live site:
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect / mobile wallets |
+| `NEXT_PUBLIC_ESCROW_ADDRESS` + `NEXT_PUBLIC_ESCROW_CHAIN_ID` (or the per-network vars) | Escrow contracts |
+| `SIGNER_PRIVATE_KEY` | Claim signer (server only — keep it secret, store it as a sensitive variable) |
+
+## Tests
+
 ```bash
-npm test                      # unit test web (verifikasi X, session, store)
-cd contracts && npm test      # test smart contract
+npm test                    # web app unit tests
+cd contracts && npm test    # smart contract tests
 ```
 
-## Langkah berikutnya (TODO)
-- Audit smart contract sebelum mainnet
+## Security
+
+- The contract has **not been audited**. Use small amounts until it is.
+- Never commit `.env` files or private keys. The signer key only belongs in your hosting
+  provider's secret settings.
+- Paxos (USDG) and Circle (USDC) can freeze addresses; funds in the escrow are subject to that.
