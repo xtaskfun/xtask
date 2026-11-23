@@ -13,6 +13,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
+          locale="en-US"
           modalSize="wide"
           theme={darkTheme({ accentColor: "#1d9bf0", borderRadius: "large" })}
           appInfo={{ appName: "xtask.fun", learnMoreUrl: "https://xtask.fun" }}
