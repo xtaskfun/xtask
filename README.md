@@ -3,8 +3,9 @@
 **Engage on X. Earn onchain.**
 
 xtask.fun is a social task platform. Projects fund a campaign that asks people to follow,
-like, repost, reply to or quote on X. Each person who completes the task claims
-**1% of the reward pool** straight from a smart contract.
+like, repost, reply to or quote on X. The project sets the reward per person and how many
+people can claim it; each person who completes the task claims their reward straight from a
+smart contract.
 
 - Website: https://xtask.fun
 - X: [@Xtaskfun](https://x.com/Xtaskfun)
@@ -13,8 +14,8 @@ like, repost, reply to or quote on X. Each person who completes the task claims
 
 - **Create a task** — paste an X link, pick the actions, choose a network and token, deposit the pool.
   The title is generated automatically (e.g. "Follow + Like @Xtaskfun").
-- **Do tasks & claim** — connect a wallet, open each step on X, claim 1% of the pool.
-- **Escrow smart contract** — funds are held by the contract, not by xtask. 100 slots per task,
+- **Do tasks & claim** — connect a wallet, open each step on X, claim the reward.
+- **Escrow smart contract** — funds are held by the contract, not by xtask. Reward and number of people set by the creator (up to 10,000),
   one claim per wallet, unclaimed slots refundable to the creator after the task ends (30 days).
 - **Multi-chain** — Base and Robinhood Chain (plus Base Sepolia for testing).
 - **Many wallets** — MetaMask, OKX, Trust, Coinbase, WalletConnect, Phantom, Rabby, Bitget,
@@ -68,11 +69,11 @@ tests/                    Unit tests
 
 The escrow contract is [`contracts/contracts/XTaskEscrow.sol`](contracts/contracts/XTaskEscrow.sol).
 
-1. **Create** — the creator deposits the pool (ERC20 or native ETH). It must split into exactly
-   100 slots, so each person gets 1%.
+1. **Create** — the creator picks the reward per person and the number of people (1–10,000)
+   and deposits reward × people (ERC20 or native ETH).
 2. **Claim** — the site asks `/api/claim` for a signature (EIP-712) made by the **signer** key,
-   then the user calls `claim()` and receives 1% from the contract. One claim per wallet,
-   max 100 claims, signatures expire after 10 minutes.
+   then the user calls `claim()` and receives the reward from the contract. One claim per wallet,
+   no more claims than people set, signatures expire after 10 minutes.
 3. **Refund** — after the task ends, the creator calls `refund()` to get the unclaimed slots back.
 
 The contract owner can only change the signer address. It cannot move anyone's pool.
@@ -108,7 +109,7 @@ Set with `NEXT_PUBLIC_VERIFICATION_MODE`:
 | `x` | X login required; actions are checked through the X API. |
 
 > ⚠️ Mode `none` cannot tell whether someone really did the task. Someone with many wallets
-> can drain a pool. The contract still limits claims to one per wallet and 100 per task.
+> can drain a pool. The contract still limits claims to one per wallet and the number of people set for the task.
 > Start with small pools.
 
 ### X verification (mode `x`)

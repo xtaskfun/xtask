@@ -4,13 +4,13 @@
 
 ## How it works
 
-1. **Create:** the creator deposits the pool (ERC20 such as USDC, or native ETH/BNB). The
-   pool must split into exactly **100 slots**, so each completer gets **1% of the pool**.
+1. **Create:** the creator picks the **reward per person** and the **number of people**
+   (1–10,000) and deposits reward × people (ERC20 such as USDC, or native ETH).
 2. **Claim:** after doing the X actions, the user clicks Claim. The website calls
    `POST /api/claim`. The server checks the user on X, then signs
    `Claim(taskId, user, deadline)` (EIP-712) with the **signer** key. The user sends
-   that signature to `claim()` and receives 1% straight from the contract.
-   - one claim per wallet per task, max 100 claims, signatures expire after 10 min
+   that signature to `claim()` and receives the reward straight from the contract.
+   - one claim per wallet per task, no more claims than people set, signatures expire after 10 min
    - a signature only works for the wallet it was made for
 3. **Refund:** after the task ends, the creator can call `refund()` to get the unclaimed slots back.
 
@@ -22,7 +22,7 @@ use a wallet that holds no funds.
 
 ```bash
 npm install
-npm test                    # 11 tests
+npm test                    # 13 tests
 npm run export-abi          # regenerate ../src/lib/escrow-abi.ts after changing the contract
 ```
 

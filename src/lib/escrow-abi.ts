@@ -96,6 +96,11 @@ export const escrowAbi = [
   },
   {
     "inputs": [],
+    "name": "InvalidSlots",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MetaTooLong",
     "type": "error"
   },
@@ -295,8 +300,14 @@ export const escrowAbi = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "pool",
+        "name": "rewardPerUser",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "slots",
+        "type": "uint32"
       },
       {
         "indexed": false,
@@ -336,12 +347,12 @@ export const escrowAbi = [
   },
   {
     "inputs": [],
-    "name": "NATIVE",
+    "name": "MAX_SLOTS",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint32",
         "name": "",
-        "type": "address"
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -349,12 +360,12 @@ export const escrowAbi = [
   },
   {
     "inputs": [],
-    "name": "SLOTS",
+    "name": "NATIVE",
     "outputs": [
       {
-        "internalType": "uint16",
+        "internalType": "address",
         "name": "",
-        "type": "uint16"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -392,8 +403,13 @@ export const escrowAbi = [
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "rewardPerUser",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "slots",
+        "type": "uint32"
       },
       {
         "internalType": "uint64",
@@ -506,9 +522,14 @@ export const escrowAbi = [
             "type": "uint64"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
+            "name": "slots",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "claimed",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
             "internalType": "bool",
@@ -572,9 +593,14 @@ export const escrowAbi = [
             "type": "uint64"
           },
           {
-            "internalType": "uint16",
+            "internalType": "uint32",
+            "name": "slots",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
             "name": "claimed",
-            "type": "uint16"
+            "type": "uint32"
           },
           {
             "internalType": "bool",

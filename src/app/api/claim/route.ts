@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 const SIGNATURE_TTL_SECONDS = 10 * 60;
 
 /**
- * Returns a signature that lets `user` claim 1% of the task pool from the escrow.
+ * Returns a signature that lets `user` claim one reward of the task from the escrow.
  * With NEXT_PUBLIC_VERIFICATION_MODE=x it also requires a logged-in X account, all
  * actions verified on X, and that this X account hasn't claimed with another wallet.
  * Otherwise there is no check beyond the contract's one-claim-per-wallet rule.

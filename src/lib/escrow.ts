@@ -10,12 +10,13 @@ const addr = (v: string | undefined) => (v && isAddress(v.trim()) ? (v.trim() as
 const chainById = (id: number) => ESCROW_CHAINS.find((c) => c.id === id);
 
 // NEXT_PUBLIC_* values must be read with static names so Next.js can inline them.
+// Per-network variables win over the original single-chain pair (first match per chain is used).
 const configured: [Chain | undefined, Address | undefined][] = [
-  // Original single-chain setting (kept so existing deployments keep working)
-  [chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
   [base, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE)],
   [robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)],
   [baseSepolia, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA)],
+  // Original single-chain setting (kept so existing deployments keep working)
+  [chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
 ];
 
 /** Every escrow this site uses, one per chain. Empty = demo mode. */
@@ -37,4 +38,5 @@ export function parseTaskKey(key: string): { escrow: Escrow; id: bigint } | null
 
 export const taskKey = (chainId: number, id: bigint | string) => `${chainId}-${id}`;
 
-export const SLOTS = 100; // each completer claims 1% of the pool
+/** Upper limit of people per task, as enforced by the contract. */
+export const MAX_SLOTS = 10_000;

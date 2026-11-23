@@ -34,25 +34,38 @@ async function withTask() {
   const f = await deploy();
   const endsAt = BigInt(await time.latest()) + 7n * DAY;
   const escrowC = await f.as(f.creator);
-  await escrowC.write.createTask([f.token.address, parseUnits("100", 6), endsAt, '{"title":"t"}']);
+  // 1 USDC per person, 100 people → 100 USDC pool
+  await escrowC.write.createTask([f.token.address, parseUnits("1", 6), 100, endsAt, '{"title":"t"}']);
   return { ...f, endsAt };
 }
 
 describe("XTaskEscrow", () => {
-  it("creates an ERC20 task: pool held in escrow, reward = 1%", async () => {
+  it("creates an ERC20 task: pool = reward x slots held in escrow", async () => {
     const { escrow, token, endsAt } = await loadFixture(withTask);
     expect(await token.read.balanceOf([escrow.address])).to.equal(parseUnits("100", 6));
     const t = await escrow.read.getTask([1n]);
     expect(t.rewardPerUser).to.equal(parseUnits("1", 6));
+    expect(t.slots).to.equal(100);
     expect(t.endsAt).to.equal(endsAt);
     expect(t.claimed).to.equal(0);
   });
 
-  it("rejects pools that are not a multiple of 100", async () => {
+  it("lets the creator choose any reward and slot count", async () => {
+    const { escrow, token, creator, as } = await loadFixture(deploy);
+    const ends = BigInt(await time.latest()) + DAY;
+    await (await as(creator)).write.createTask([token.address, parseUnits("2.5", 6), 7, ends, ""]);
+    expect(await token.read.balanceOf([escrow.address])).to.equal(parseUnits("17.5", 6));
+    const t = await escrow.read.getTask([1n]);
+    expect([t.rewardPerUser, t.slots]).to.deep.equal([parseUnits("2.5", 6), 7]);
+  });
+
+  it("rejects zero reward and out-of-range slots", async () => {
     const { token, creator, as } = await loadFixture(deploy);
     const c = await as(creator);
     const ends = BigInt(await time.latest()) + DAY;
-    await expect(c.write.createTask([token.address, 150n, ends, ""])).to.be.rejectedWith("InvalidAmount");
+    await expect(c.write.createTask([token.address, 0n, 10, ends, ""])).to.be.rejectedWith("InvalidAmount");
+    await expect(c.write.createTask([token.address, 1n, 0, ends, ""])).to.be.rejectedWith("InvalidSlots");
+    await expect(c.write.createTask([token.address, 1n, 10_001, ends, ""])).to.be.rejectedWith("InvalidSlots");
   });
 
   it("lets a verified user claim exactly once", async () => {
@@ -94,18 +107,18 @@ describe("XTaskEscrow", () => {
     await expect(a.write.claim([1n, later, sig2])).to.be.rejectedWith("TaskEnded");
   });
 
-  it("stops at 100 claims (1% each)", async () => {
+  it("stops when all slots are claimed", async () => {
     const { escrow, token, sign, creator, as } = await loadFixture(deploy);
     const ends = BigInt(await time.latest()) + DAY;
-    await (await as(creator)).write.createTask([token.address, 100n, ends, ""]); // 1 unit per slot
+    await (await as(creator)).write.createTask([token.address, 3n, 5, ends, ""]); // 3 units x 5 people
     const { privateKeyToAccount, generatePrivateKey } = await import("viem/accounts");
-    for (let i = 0; i <= 100; i++) {
+    for (let i = 0; i <= 5; i++) {
       const acct = privateKeyToAccount(generatePrivateKey());
       await hre.network.provider.request({ method: "hardhat_setBalance", params: [acct.address, "0xDE0B6B3A7640000"] });
       const w = await hre.viem.getWalletClient(acct.address, { account: acct });
       const e = await hre.viem.getContractAt("XTaskEscrow", escrow.address, { client: { wallet: w } });
       const sig = await sign(1n, acct.address, ends);
-      if (i < 100) await e.write.claim([1n, ends, sig]);
+      if (i < 5) await e.write.claim([1n, ends, sig]);
       else await expect(e.write.claim([1n, ends, sig])).to.be.rejectedWith("TaskFull");
     }
     expect(await token.read.balanceOf([escrow.address])).to.equal(0n);
@@ -128,10 +141,18 @@ describe("XTaskEscrow", () => {
     await expect(c.write.refund([1n])).to.be.rejectedWith("AlreadyRefunded");
   });
 
+  it("requires the exact deposit for native pools", async () => {
+    const { creator, as } = await loadFixture(deploy);
+    const ends = BigInt(await time.latest()) + DAY;
+    await expect(
+      (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: parseEther("0.5") })
+    ).to.be.rejectedWith("InvalidAmount");
+  });
+
   it("supports native ETH pools", async () => {
     const { escrow, creator, alice, sign, as, publicClient } = await loadFixture(deploy);
     const ends = BigInt(await time.latest()) + DAY;
-    await (await as(creator)).write.createTask([zeroAddress, parseEther("1"), ends, ""], { value: parseEther("1") });
+    await (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: parseEther("1") });
     expect(await publicClient.getBalance({ address: escrow.address })).to.equal(parseEther("1"));
 
     const deadline = ends;
@@ -153,7 +174,7 @@ describe("XTaskEscrow", () => {
     const { token, creator, as } = await loadFixture(deploy);
     const c = await as(creator);
     const ends = BigInt(await time.latest()) + DAY;
-    for (let i = 0; i < 3; i++) await c.write.createTask([token.address, 100n, ends, `{"i":${i}}`]);
+    for (let i = 0; i < 3; i++) await c.write.createTask([token.address, 1n, 100, ends, `{"i":${i}}`]);
     const [ids, list] = await c.read.getTasks([0n, 10n]);
     expect(ids).to.deep.equal([3n, 2n, 1n]);
     expect(list[0].meta).to.equal('{"i":2}');

@@ -10,14 +10,14 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title xtask.fun escrow
-/// @notice Holds the reward pool of every task. Each task has exactly 100 slots and
-///         every completer can claim 1% of the pool, once. Claims need a signature from
-///         the xtask backend proving the user completed the X actions.
+/// @notice Holds the reward pool of every task. The creator picks the reward per person
+///         and the number of slots; the pool is reward x slots. Every completer can claim
+///         one reward, once. Claims need a signature from the xtask backend.
 ///         The owner can only rotate the signer — it can never move users' funds.
 contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    uint16 public constant SLOTS = 100; // 1% of the pool per claim
+    uint32 public constant MAX_SLOTS = 10_000;
     uint256 public constant MAX_META_LENGTH = 1024;
     address public constant NATIVE = address(0);
 
@@ -29,7 +29,8 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
         address token; // address(0) = native coin (ETH / BNB / ...)
         uint256 rewardPerUser;
         uint64 endsAt;
-        uint16 claimed;
+        uint32 slots;
+        uint32 claimed;
         bool refunded;
         string meta; // JSON: title, description, targetUrl, actions, category
     }
@@ -39,12 +40,20 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     mapping(uint256 => Task) private _tasks;
     mapping(uint256 => mapping(address => bool)) public hasClaimed;
 
-    event TaskCreated(uint256 indexed taskId, address indexed creator, address indexed token, uint256 pool, uint64 endsAt);
+    event TaskCreated(
+        uint256 indexed taskId,
+        address indexed creator,
+        address indexed token,
+        uint256 rewardPerUser,
+        uint32 slots,
+        uint64 endsAt
+    );
     event Claimed(uint256 indexed taskId, address indexed user, uint256 amount);
     event Refunded(uint256 indexed taskId, address indexed creator, uint256 amount);
     event SignerUpdated(address signer);
 
     error InvalidAmount();
+    error InvalidSlots();
     error InvalidEndTime();
     error MetaTooLong();
     error UnknownTask();
@@ -66,14 +75,17 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
 
     // ---------------------------------------------------------------- create
 
-    /// @param amount Total pool. Must be a multiple of 100 so every slot is equal.
-    function createTask(address token, uint256 amount, uint64 endsAt, string calldata meta)
+    /// @param rewardPerUser What each completer receives, in token base units.
+    /// @param slots How many people can claim (1..MAX_SLOTS). The deposit is rewardPerUser * slots.
+    function createTask(address token, uint256 rewardPerUser, uint32 slots, uint64 endsAt, string calldata meta)
         external
         payable
         nonReentrant
         returns (uint256 taskId)
     {
-        if (amount == 0 || amount % SLOTS != 0) revert InvalidAmount();
+        if (rewardPerUser == 0) revert InvalidAmount();
+        if (slots == 0 || slots > MAX_SLOTS) revert InvalidSlots();
+        uint256 amount = rewardPerUser * slots;
         if (endsAt <= block.timestamp) revert InvalidEndTime();
         if (bytes(meta).length > MAX_META_LENGTH) revert MetaTooLong();
 
@@ -91,14 +103,15 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
         _tasks[taskId] = Task({
             creator: msg.sender,
             token: token,
-            rewardPerUser: amount / SLOTS,
+            rewardPerUser: rewardPerUser,
             endsAt: endsAt,
+            slots: slots,
             claimed: 0,
             refunded: false,
             meta: meta
         });
 
-        emit TaskCreated(taskId, msg.sender, token, amount, endsAt);
+        emit TaskCreated(taskId, msg.sender, token, rewardPerUser, slots, endsAt);
     }
 
     // ----------------------------------------------------------------- claim
@@ -107,7 +120,7 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
         Task storage t = _tasks[taskId];
         if (t.creator == address(0)) revert UnknownTask();
         if (block.timestamp > t.endsAt || t.refunded) revert TaskEnded();
-        if (t.claimed >= SLOTS) revert TaskFull();
+        if (t.claimed >= t.slots) revert TaskFull();
         if (hasClaimed[taskId][msg.sender]) revert AlreadyClaimed();
         if (block.timestamp > deadline) revert SignatureExpired();
 
@@ -132,7 +145,7 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
         if (t.refunded) revert AlreadyRefunded();
 
         t.refunded = true;
-        uint256 amount = t.rewardPerUser * (SLOTS - t.claimed);
+        uint256 amount = t.rewardPerUser * (t.slots - t.claimed);
         if (amount > 0) _pay(t.token, t.creator, amount);
         emit Refunded(taskId, t.creator, amount);
     }

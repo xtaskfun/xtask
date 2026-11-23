@@ -30,7 +30,7 @@ export default function TasksPage() {
   return (
     <div className="py-10">
       <h1 className="text-3xl font-bold">Tasks</h1>
-      <p className="mt-1 text-muted">Pick a task, complete it on X, claim 1% of the pool.</p>
+      <p className="mt-1 text-muted">Pick a task, complete it on X, claim your reward.</p>
       {isDemo && <DemoBanner />}
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row">

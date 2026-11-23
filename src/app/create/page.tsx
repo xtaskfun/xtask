@@ -8,7 +8,7 @@ import { erc20Abi, formatUnits, parseEventLogs, parseUnits, zeroAddress } from "
 import TaskCard from "@/components/TaskCard";
 import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 import { ACTION_META, CATEGORIES, Category, Task, TaskAction, TaskMeta, autoTitle } from "@/lib/tasks";
-import { ESCROWS, SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
+import { ESCROWS, MAX_SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
 import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
@@ -64,7 +64,8 @@ export default function CreatePage() {
     targetUrl: "",
     actions: ["follow", "like"] as TaskAction[],
     token: "USDC",
-    pool: "100",
+    reward: "1",
+    slots: "100",
     category: "Project" as Category,
   });
   const [step, setStep] = useState<"" | "switch" | "approve" | "create" | "confirm" | "done">("");
@@ -78,17 +79,20 @@ export default function CreatePage() {
   const token = available.find((t) => t.symbol === form.token) ?? available[0];
   const tokenSymbol = token?.symbol ?? form.token;
 
-  // Pool in base units, rounded down so it splits into exactly 100 equal slots.
-  const amount = useMemo(() => {
+  // The creator picks the reward per person and how many people; the deposit is reward x slots.
+  const decimals = token?.decimals ?? 18;
+  const rewardRaw = useMemo(() => {
     try {
-      const raw = parseUnits(form.pool || "0", token?.decimals ?? 18);
-      return raw - (raw % BigInt(SLOTS));
+      return parseUnits(form.reward || "0", decimals);
     } catch {
       return 0n;
     }
-  }, [form.pool, token]);
-  const poolNum = Number(formatUnits(amount, token?.decimals ?? 18));
-  const perUser = Number(formatUnits(amount / BigInt(SLOTS), token?.decimals ?? 18));
+  }, [form.reward, decimals]);
+  const slots = Math.floor(Number(form.slots) || 0);
+  const slotsOk = slots >= 1 && slots <= MAX_SLOTS;
+  const amount = slotsOk ? rewardRaw * BigInt(slots) : 0n;
+  const poolNum = Number(formatUnits(amount, decimals));
+  const perUser = Number(formatUnits(rewardRaw, decimals));
 
   const meta: TaskMeta = {
     // Title is generated from the actions + X account; no description needed.
@@ -112,7 +116,7 @@ export default function CreatePage() {
         ? "Like, repost, reply and quote need a link to a specific post (…/status/…)."
         : "";
 
-  const valid = target && !urlError && form.actions.length && amount > 0n && !metaTooLong;
+  const valid = target && !urlError && form.actions.length && rewardRaw > 0n && slotsOk && !metaTooLong;
 
   const preview: Task = {
     id: "preview",
@@ -123,7 +127,7 @@ export default function CreatePage() {
     targetUrl: meta.targetUrl,
     rewardPerUser: perUser,
     token: tokenSymbol,
-    slots: SLOTS,
+    slots: slotsOk ? slots : 0,
     filled: 0,
     endsAt: new Date(Date.now() + TASK_DURATION_DAYS * 86_400_000).toISOString(),
     category: form.category,
@@ -170,7 +174,7 @@ export default function CreatePage() {
         address: ESCROW_ADDRESS,
         abi: escrowAbi,
         functionName: "createTask",
-        args: [token.address, amount, endsAt, metaJson],
+        args: [token.address, rewardRaw, slots, endsAt, metaJson],
         value: isNative ? amount : 0n,
         chainId: ESCROW_CHAIN_ID,
       });
@@ -199,7 +203,7 @@ export default function CreatePage() {
     <div className="py-10">
       <h1 className="text-3xl font-bold">Create a task</h1>
       <p className="mt-1 text-muted">
-        Deposit a reward pool. {SLOTS} people can complete your task and each claims 1% of the pool.
+        Set the reward per person and how many people can claim it. You deposit the total up front.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -272,18 +276,23 @@ export default function CreatePage() {
                 ))}
               </select>
             </div>
-            <div className="sm:col-span-2">
-              <label className="label">Total reward pool</label>
+            <div>
+              <label className="label">Reward per person</label>
               <div className="relative">
-                <input type="number" min={0} step="any" className="input pr-16" value={form.pool} onChange={(e) => set("pool", e.target.value)} />
+                <input type="number" min={0} step="any" className="input pr-16" value={form.reward} onChange={(e) => set("reward", e.target.value)} />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">{tokenSymbol}</span>
               </div>
+            </div>
+            <div>
+              <label className="label">Number of people</label>
+              <input type="number" min={1} max={MAX_SLOTS} step={1} className="input" value={form.slots} onChange={(e) => set("slots", e.target.value)} />
+              {!slotsOk && form.slots !== "" && <p className="mt-1 text-xs text-red-400">Between 1 and {MAX_SLOTS.toLocaleString()}.</p>}
             </div>
           </div>
 
           <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
-            <div className="flex justify-between"><span className="text-muted">Slots</span><span>{SLOTS} people</span></div>
-            <div className="flex justify-between"><span className="text-muted">Reward per person (1%)</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Reward per person</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
+            <div className="flex justify-between"><span className="text-muted">People</span><span>× {slotsOk ? slots.toLocaleString() : "–"}</span></div>
             <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You deposit</span><span className="text-rainbow">{poolNum.toLocaleString()} {tokenSymbol}</span></div>
             <p className="pt-1 text-xs text-muted">
               Funds are held by the escrow smart contract, not by xtask. The task runs for {TASK_DURATION_DAYS} days; slots nobody claimed are refundable to you after that.

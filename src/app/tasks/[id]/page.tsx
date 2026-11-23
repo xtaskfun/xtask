@@ -46,7 +46,7 @@ export default function TaskDetailPage() {
 
         <aside className="h-fit space-y-4 rounded-2xl border border-line bg-card p-6">
           <div>
-            <div className="text-sm text-muted">Your reward (1% of pool)</div>
+            <div className="text-sm text-muted">Your reward</div>
             <div className="text-rainbow text-3xl font-black">{task.rewardPerUser.toLocaleString()} {task.token}</div>
           </div>
           <Progress value={task.filled} max={task.slots} />

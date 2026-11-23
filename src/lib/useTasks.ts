@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { formatUnits } from "viem";
 import { useReadContract, useReadContracts } from "wagmi";
-import { ESCROWS, HAS_ESCROW, SLOTS, escrowAbi, parseTaskKey, taskKey, type Escrow } from "./escrow";
+import { ESCROWS, HAS_ESCROW, escrowAbi, parseTaskKey, taskKey, type Escrow } from "./escrow";
 import { TASKS, Task, parseMeta, getTask as getDemoTask } from "./tasks";
 import { findToken } from "./tokens";
 
@@ -12,6 +12,7 @@ type RawTask = {
   token: `0x${string}`;
   rewardPerUser: bigint;
   endsAt: bigint;
+  slots: number;
   claimed: number;
   refunded: boolean;
   meta: string;
@@ -30,7 +31,7 @@ export function toTask(escrow: Escrow, id: bigint, t: RawTask): Task {
     targetUrl: meta.targetUrl,
     rewardPerUser: Number(formatUnits(t.rewardPerUser, token.decimals)),
     token: token.symbol,
-    slots: SLOTS,
+    slots: t.slots,
     filled: t.claimed,
     endsAt: new Date(endsAtMs).toISOString(),
     category: meta.category,

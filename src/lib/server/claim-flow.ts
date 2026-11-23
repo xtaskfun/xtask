@@ -44,7 +44,7 @@ export async function loadOpenTask(escrow: Escrow, taskId: bigint) {
     throw new HttpError(404, "Task not found");
   }
   if (task.refunded || BigInt(Math.floor(Date.now() / 1000)) > task.endsAt) throw new HttpError(409, "Task has ended");
-  if (task.claimed >= 100) throw new HttpError(409, "Task is full");
+  if (task.claimed >= task.slots) throw new HttpError(409, "Task is full");
   return { task, meta: parseMeta(task.meta) };
 }
 
