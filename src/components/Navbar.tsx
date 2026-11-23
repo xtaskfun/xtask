@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/", label: "Home", icon: "🏠" },
   { href: "/tasks", label: "Tasks", icon: "📋" },
   { href: "/create", label: "Create", icon: "➕" },
+  { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
 ];
 
 function isActive(path: string, href: string) {
@@ -55,7 +56,7 @@ export default function Navbar() {
       </header>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-line bg-bg/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-bg/95 backdrop-blur md:hidden">
         {NAV.map((n) => (
           <Link
             key={n.href}

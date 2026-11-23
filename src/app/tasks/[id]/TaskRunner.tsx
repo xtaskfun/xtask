@@ -8,9 +8,22 @@ import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { escrowAbi } from "@/lib/escrow";
 import { useXSession } from "@/lib/useXSession";
 import { XConnectButton } from "@/components/XConnect";
-import { VERIFICATION_MODE } from "@/lib/site";
+import { SITE_URL, VERIFICATION_MODE, X_HANDLE } from "@/lib/site";
 
 const CHECK_ON_X = VERIFICATION_MODE === "x";
+
+/** X "post" intent: opens X with the text pre-filled (no API needed). */
+export function shareOnX(text: string, url: string) {
+  return `https://x.com/intent/post?${new URLSearchParams({ text, url }).toString()}`;
+}
+
+function ShareButton({ href, label }: { href: string; label: string }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer noopener" className="btn-rainbow w-full py-3">
+      <span className="font-black">𝕏</span> {label}
+    </a>
+  );
+}
 
 type Status = "todo" | "waiting" | "done" | "missing";
 
@@ -187,6 +200,15 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
         ) : (
           <p className="text-muted">After the task ends you can refund the unclaimed slots here.</p>
         )}
+        {!ended && (
+          <ShareButton
+            label="Share your task on X"
+            href={shareOnX(
+              `New task on @${X_HANDLE} 🌈\n\n${task.title} and earn ${task.rewardPerUser.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${task.token}. ${task.slots - task.filled} spots left 👇`,
+              `${SITE_URL}/tasks/${task.id}`
+            )}
+          />
+        )}
         {error && <p className="text-red-400">{error}</p>}
       </div>
     );
@@ -277,6 +299,15 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
       >
         {claimLabel}
       </button>
+      {claimed && (
+        <ShareButton
+          label="Share on X"
+          href={shareOnX(
+            `I just earned ${task.rewardPerUser.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${task.token} on @${X_HANDLE} by completing a task 🌈\n\nEngage on X. Earn onchain 👇`,
+            `${SITE_URL}/tasks/${task.id}`
+          )}
+        />
+      )}
       {error && <p className="text-sm text-red-400">{error}</p>}
       {isDemo && <p className="text-xs text-muted">Demo mode — nothing is paid out.</p>}
     </div>
