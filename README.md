@@ -70,13 +70,14 @@ tests/                    Unit tests
 The escrow contract is [`contracts/contracts/XTaskEscrow.sol`](contracts/contracts/XTaskEscrow.sol).
 
 1. **Create** — the creator picks the reward per person and the number of people (1–10,000)
-   and deposits reward × people (ERC20 or native ETH).
+   and pays reward × people plus a **5% platform fee** (ERC20 or native ETH). The fee is 5% of
+   the total paid — e.g. a 9.5 pool costs 10 — and goes to the fee recipient right away.
 2. **Claim** — the site asks `/api/claim` for a signature (EIP-712) made by the **signer** key,
    then the user calls `claim()` and receives the reward from the contract. One claim per wallet,
    no more claims than people set, signatures expire after 10 minutes.
 3. **Refund** — after the task ends, the creator calls `refund()` to get the unclaimed slots back.
 
-The contract owner can only change the signer address. It cannot move anyone's pool.
+The contract owner can change the signer and the fee (max 10%, new tasks only). It cannot move anyone's pool.
 See [`contracts/README.md`](contracts/README.md) for details and deployment.
 
 ## Networks

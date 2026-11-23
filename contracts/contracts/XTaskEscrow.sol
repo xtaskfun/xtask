@@ -13,11 +13,15 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 /// @notice Holds the reward pool of every task. The creator picks the reward per person
 ///         and the number of slots; the pool is reward x slots. Every completer can claim
 ///         one reward, once. Claims need a signature from the xtask backend.
-///         The owner can only rotate the signer — it can never move users' funds.
+///         A platform fee (default 5% of the total paid, max 10%) is sent to the fee
+///         recipient when a task is created. The owner can rotate the signer and set the
+///         fee for future tasks — it can never move funds already in a task's pool.
 contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_SLOTS = 10_000;
+    uint16 public constant MAX_FEE_BPS = 1_000; // 10%
+    uint16 public constant BPS = 10_000;
     uint256 public constant MAX_META_LENGTH = 1024;
     address public constant NATIVE = address(0);
 
@@ -36,6 +40,9 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     }
 
     address public signer;
+    address public feeRecipient;
+    /// @notice Fee as a share of the total the creator pays, in basis points (500 = 5%).
+    uint16 public feeBps;
     uint256 public taskCount;
     mapping(uint256 => Task) private _tasks;
     mapping(uint256 => mapping(address => bool)) public hasClaimed;
@@ -46,11 +53,13 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
         address indexed token,
         uint256 rewardPerUser,
         uint32 slots,
+        uint256 fee,
         uint64 endsAt
     );
     event Claimed(uint256 indexed taskId, address indexed user, uint256 amount);
     event Refunded(uint256 indexed taskId, address indexed creator, uint256 amount);
     event SignerUpdated(address signer);
+    event FeeUpdated(address recipient, uint16 feeBps);
 
     error InvalidAmount();
     error InvalidSlots();
@@ -66,17 +75,32 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     error NotEnded();
     error AlreadyRefunded();
     error ZeroAddress();
+    error FeeTooHigh();
 
     constructor(address initialOwner, address initialSigner) EIP712("xtask.fun", "1") Ownable(initialOwner) {
         if (initialSigner == address(0)) revert ZeroAddress();
         signer = initialSigner;
         emit SignerUpdated(initialSigner);
+        feeRecipient = initialOwner;
+        feeBps = 500;
+        emit FeeUpdated(initialOwner, 500);
+    }
+
+    // ------------------------------------------------------------------ quote
+
+    /// @notice What a task costs. The fee is `feeBps` of the total, rounded up:
+    ///         e.g. a 9.5 pool at 5% costs 10 (0.5 fee).
+    function quote(uint256 rewardPerUser, uint32 slots) public view returns (uint256 pool, uint256 fee, uint256 total) {
+        pool = rewardPerUser * slots;
+        fee = feeBps == 0 ? 0 : (pool * feeBps + (BPS - feeBps) - 1) / (BPS - feeBps);
+        total = pool + fee;
     }
 
     // ---------------------------------------------------------------- create
 
     /// @param rewardPerUser What each completer receives, in token base units.
-    /// @param slots How many people can claim (1..MAX_SLOTS). The deposit is rewardPerUser * slots.
+    /// @param slots How many people can claim (1..MAX_SLOTS).
+    /// @dev The creator pays `total` from quote(): the pool plus the platform fee.
     function createTask(address token, uint256 rewardPerUser, uint32 slots, uint64 endsAt, string calldata meta)
         external
         payable
@@ -85,7 +109,7 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     {
         if (rewardPerUser == 0) revert InvalidAmount();
         if (slots == 0 || slots > MAX_SLOTS) revert InvalidSlots();
-        uint256 amount = rewardPerUser * slots;
+        (, uint256 fee, uint256 amount) = quote(rewardPerUser, slots);
         if (endsAt <= block.timestamp) revert InvalidEndTime();
         if (bytes(meta).length > MAX_META_LENGTH) revert MetaTooLong();
 
@@ -99,6 +123,8 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
             if (IERC20(token).balanceOf(address(this)) - before != amount) revert InvalidAmount();
         }
 
+        if (fee > 0) _pay(token, feeRecipient, fee);
+
         taskId = ++taskCount;
         _tasks[taskId] = Task({
             creator: msg.sender,
@@ -111,7 +137,7 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
             meta: meta
         });
 
-        emit TaskCreated(taskId, msg.sender, token, rewardPerUser, slots, endsAt);
+        emit TaskCreated(taskId, msg.sender, token, rewardPerUser, slots, fee, endsAt);
     }
 
     // ----------------------------------------------------------------- claim
@@ -151,6 +177,15 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     }
 
     // ----------------------------------------------------------------- admin
+
+    /// @notice Applies to tasks created afterwards. Capped at MAX_FEE_BPS.
+    function setFee(address recipient, uint16 newFeeBps) external onlyOwner {
+        if (recipient == address(0)) revert ZeroAddress();
+        if (newFeeBps > MAX_FEE_BPS) revert FeeTooHigh();
+        feeRecipient = recipient;
+        feeBps = newFeeBps;
+        emit FeeUpdated(recipient, newFeeBps);
+    }
 
     function setSigner(address newSigner) external onlyOwner {
         if (newSigner == address(0)) revert ZeroAddress();

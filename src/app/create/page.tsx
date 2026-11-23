@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, usePublicClient, useReadContracts, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useReadContracts, useSwitchChain, useWriteContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { erc20Abi, formatUnits, parseEventLogs, parseUnits, zeroAddress } from "viem";
 import TaskCard from "@/components/TaskCard";
@@ -12,8 +12,10 @@ import { ESCROWS, MAX_SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
 import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
+import { DEFAULT_FEE_BPS, quote } from "@/lib/fees";
 
 const MAX_META_BYTES = 1024;
+
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
 const TASK_DURATION_DAYS = 30;
 
@@ -58,6 +60,9 @@ export default function CreatePage() {
   const netName = escrow?.chain.name ?? "Base";
   const publicClient = usePublicClient({ chainId: netId });
   const { tokens, checking } = useVerifiedTokens(netId);
+  // Platform fee is read from the escrow, so it always matches what the contract charges.
+  const feeQ = useReadContract({ address: escrow?.address, abi: escrowAbi, functionName: "feeBps", chainId: netId, query: { enabled: !!escrow } });
+  const feeBps = escrow ? feeQ.data : DEFAULT_FEE_BPS;
 
   const [form, setForm] = useState({
     handle: "",
@@ -90,8 +95,8 @@ export default function CreatePage() {
   }, [form.reward, decimals]);
   const slots = Math.floor(Number(form.slots) || 0);
   const slotsOk = slots >= 1 && slots <= MAX_SLOTS;
-  const amount = slotsOk ? rewardRaw * BigInt(slots) : 0n;
-  const poolNum = Number(formatUnits(amount, decimals));
+  const { pool, fee, total: amount } = slotsOk && feeBps !== undefined ? quote(rewardRaw, slots, feeBps) : { pool: 0n, fee: 0n, total: 0n };
+  const fmt = (v: bigint) => Number(formatUnits(v, decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 });
   const perUser = Number(formatUnits(rewardRaw, decimals));
 
   const meta: TaskMeta = {
@@ -116,7 +121,7 @@ export default function CreatePage() {
         ? "Like, repost, reply and quote need a link to a specific post (…/status/…)."
         : "";
 
-  const valid = target && !urlError && form.actions.length && rewardRaw > 0n && slotsOk && !metaTooLong;
+  const valid = target && !urlError && form.actions.length && rewardRaw > 0n && slotsOk && amount > 0n && !metaTooLong;
 
   const preview: Task = {
     id: "preview",
@@ -191,7 +196,7 @@ export default function CreatePage() {
 
   const busy = step !== "" && step !== "done";
   const buttonLabel = {
-    "": `Deposit ${poolNum.toLocaleString()} ${tokenSymbol} & publish`,
+    "": `Pay ${fmt(amount)} ${tokenSymbol} & publish`,
     switch: `Switching to ${netName}…`,
     approve: `Approving ${tokenSymbol}…`,
     create: "Confirm in wallet…",
@@ -203,7 +208,7 @@ export default function CreatePage() {
     <div className="py-10">
       <h1 className="text-3xl font-bold">Create a task</h1>
       <p className="mt-1 text-muted">
-        Set the reward per person and how many people can claim it. You deposit the total up front.
+        Set the reward per person and how many people can claim it. You pay the total up front, including a {(feeBps ?? DEFAULT_FEE_BPS) / 100}% platform fee.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -293,7 +298,9 @@ export default function CreatePage() {
           <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
             <div className="flex justify-between"><span className="text-muted">Reward per person</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
             <div className="flex justify-between"><span className="text-muted">People</span><span>× {slotsOk ? slots.toLocaleString() : "–"}</span></div>
-            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You deposit</span><span className="text-rainbow">{poolNum.toLocaleString()} {tokenSymbol}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Reward pool</span><span>{fmt(pool)} {tokenSymbol}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Platform fee ({feeBps === undefined ? "…" : feeBps / 100}%)</span><span>{fmt(fee)} {tokenSymbol}</span></div>
+            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You pay</span><span className="text-rainbow">{fmt(amount)} {tokenSymbol}</span></div>
             <p className="pt-1 text-xs text-muted">
               Funds are held by the escrow smart contract, not by xtask. The task runs for {TASK_DURATION_DAYS} days; slots nobody claimed are refundable to you after that.
             </p>

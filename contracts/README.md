@@ -5,7 +5,9 @@
 ## How it works
 
 1. **Create:** the creator picks the **reward per person** and the **number of people**
-   (1–10,000) and deposits reward × people (ERC20 such as USDC, or native ETH).
+   (1–10,000) and pays reward × people plus the platform fee (ERC20 such as USDC, or native
+   ETH). The fee is `feeBps` of the total (default 5%: a 9.5 pool costs 10) and is sent to
+   `feeRecipient` (the owner by default) when the task is created. `quote()` returns the numbers.
 2. **Claim:** after doing the X actions, the user clicks Claim. The website calls
    `POST /api/claim`. The server checks the user on X, then signs
    `Claim(taskId, user, deadline)` (EIP-712) with the **signer** key. The user sends
@@ -14,7 +16,8 @@
    - a signature only works for the wallet it was made for
 3. **Refund:** after the task ends, the creator can call `refund()` to get the unclaimed slots back.
 
-The contract owner can only change the signer address. It **cannot** withdraw anyone's pool.
+The contract owner can change the signer and the fee via `setFee(recipient, bps)` (max 10%,
+applies to new tasks only). It **cannot** withdraw anyone's pool.
 Anyone who has the signer key can approve claims, so keep `SIGNER_PRIVATE_KEY` secret and
 use a wallet that holds no funds.
 
@@ -22,7 +25,7 @@ use a wallet that holds no funds.
 
 ```bash
 npm install
-npm test                    # 13 tests
+npm test                    # 16 tests
 npm run export-abi          # regenerate ../src/lib/escrow-abi.ts after changing the contract
 ```
 

@@ -145,14 +145,15 @@ describe("XTaskEscrow", () => {
     const { creator, as } = await loadFixture(deploy);
     const ends = BigInt(await time.latest()) + DAY;
     await expect(
-      (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: parseEther("0.5") })
+      (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: parseEther("1") }) // missing the fee
     ).to.be.rejectedWith("InvalidAmount");
   });
 
   it("supports native ETH pools", async () => {
     const { escrow, creator, alice, sign, as, publicClient } = await loadFixture(deploy);
     const ends = BigInt(await time.latest()) + DAY;
-    await (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: parseEther("1") });
+    const [, , total] = await escrow.read.quote([parseEther("0.01"), 100]);
+    await (await as(creator)).write.createTask([zeroAddress, parseEther("0.01"), 100, ends, ""], { value: total });
     expect(await publicClient.getBalance({ address: escrow.address })).to.equal(parseEther("1"));
 
     const deadline = ends;
@@ -161,6 +162,40 @@ describe("XTaskEscrow", () => {
     const r = await publicClient.waitForTransactionReceipt({ hash });
     const after = await publicClient.getBalance({ address: alice.account.address });
     expect(after - before + r.gasUsed * r.effectiveGasPrice).to.equal(parseEther("0.01"));
+  });
+
+  it("charges a 5% platform fee: a 9.5 pool costs 10, the fee goes to the owner", async () => {
+    const { escrow, token, owner, creator, as } = await loadFixture(deploy);
+    const [pool, fee, total] = await escrow.read.quote([parseUnits("0.095", 6), 100]);
+    expect([pool, fee, total]).to.deep.equal([parseUnits("9.5", 6), parseUnits("0.5", 6), parseUnits("10", 6)]);
+
+    const ends = BigInt(await time.latest()) + DAY;
+    const ownerBefore = await token.read.balanceOf([owner.account.address]);
+    const creatorBefore = await token.read.balanceOf([creator.account.address]);
+    await (await as(creator)).write.createTask([token.address, parseUnits("0.095", 6), 100, ends, ""]);
+    expect(creatorBefore - (await token.read.balanceOf([creator.account.address]))).to.equal(parseUnits("10", 6));
+    expect((await token.read.balanceOf([owner.account.address])) - ownerBefore).to.equal(parseUnits("0.5", 6));
+    expect(await token.read.balanceOf([escrow.address])).to.equal(parseUnits("9.5", 6));
+  });
+
+  it("charges the fee on native pools too", async () => {
+    const { escrow, owner, creator, as, publicClient } = await loadFixture(deploy);
+    const ends = BigInt(await time.latest()) + DAY;
+    const [pool, fee, total] = await escrow.read.quote([parseEther("0.0095"), 100]);
+    const before = await publicClient.getBalance({ address: owner.account.address });
+    await (await as(creator)).write.createTask([zeroAddress, parseEther("0.0095"), 100, ends, ""], { value: total });
+    expect(await publicClient.getBalance({ address: escrow.address })).to.equal(pool);
+    expect((await publicClient.getBalance({ address: owner.account.address })) - before).to.equal(fee);
+  });
+
+  it("only the owner can change the fee, capped at 10%; 0% is allowed", async () => {
+    const { escrow, eve, as } = await loadFixture(deploy);
+    await expect((await as(eve)).write.setFee([eve.account.address, 100])).to.be.rejectedWith("OwnableUnauthorizedAccount");
+    await expect(escrow.write.setFee([eve.account.address, 1001])).to.be.rejectedWith("FeeTooHigh");
+    await escrow.write.setFee([eve.account.address, 0]);
+    const [pool, fee, total] = await escrow.read.quote([10n, 3]);
+    expect([pool, fee, total]).to.deep.equal([30n, 0n, 30n]);
+    expect(await escrow.read.feeRecipient()).to.equal(getAddress(eve.account.address));
   });
 
   it("only the owner can rotate the signer", async () => {
