@@ -210,7 +210,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
           <ShareButton
             label="Share your task on X"
             href={shareOnX(
-              `New task on @${X_HANDLE} 🌈\n\n${task.title} and earn ${task.rewardPerUser.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${task.token}. ${task.slots - task.filled} spots left 👇`,
+              `New task on @${X_HANDLE}\n\n${task.title} and earn ${task.rewardPerUser.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${task.token}. ${task.slots - task.filled} spots left:`,
               `${SITE_URL}/tasks/${task.id}`
             )}
           />
@@ -309,7 +309,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
         <ShareButton
           label="Share on X"
           href={shareOnX(
-            `I just earned ${task.rewardPerUser.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${task.token} on @${X_HANDLE} by completing a task 🌈\n\nEngage on X. Earn onchain 👇`,
+            `I just earned ${task.rewardPerUser.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${task.token} on @${X_HANDLE} by completing a task.\n\nEngage on X. Earn onchain:`,
             `${SITE_URL}/tasks/${task.id}`
           )}
         />
