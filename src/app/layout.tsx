@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { X_HANDLE } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   title,
   description,
   openGraph: { title, description, siteName: "xtask.fun", type: "website" },
-  twitter: { card: "summary_large_image", title, description },
+  twitter: { card: "summary_large_image", title, description, site: `@${X_HANDLE}`, creator: `@${X_HANDLE}` },
 };
 
 export const viewport = { themeColor: "#000000" };

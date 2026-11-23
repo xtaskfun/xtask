@@ -1,5 +1,6 @@
 import Link from "next/link";
 import TrendingTasks from "@/components/TaskGrid";
+import { X_HANDLE, X_URL } from "@/lib/site";
 
 const STATS = [
   { label: "Rewards paid", value: "$248K" },
@@ -81,6 +82,17 @@ export default function HomePage() {
           Fund a campaign in any token, set the actions you want, and let thousands of real users boost your post.
         </p>
         <Link href="/create" className="btn-primary mt-6">Launch campaign</Link>
+      </section>
+
+      {/* Follow on X */}
+      <section className="mt-20 flex flex-col items-center gap-4 rounded-3xl border border-line bg-surface p-8 text-center md:flex-row md:justify-between md:text-left">
+        <div>
+          <h2 className="text-xl font-bold">Never miss a new task</h2>
+          <p className="mt-1 text-sm text-muted">New campaigns, raids and updates are posted on X first.</p>
+        </div>
+        <a href={X_URL} target="_blank" rel="noreferrer noopener" className="btn-rainbow shrink-0 px-6 py-3">
+          <span className="font-black">𝕏</span> Follow @{X_HANDLE}
+        </a>
       </section>
     </>
   );
