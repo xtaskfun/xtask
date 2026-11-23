@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import ConnectWallet from "@/components/ConnectWallet";
 import { useAccount, useDeployContract, usePublicClient, useReadContract, useSwitchChain } from "wagmi";
 import { base, baseSepolia, robinhood } from "@/lib/chains";
 import { ESCROWS } from "@/lib/escrow";
@@ -174,7 +174,7 @@ export default function DeployPage() {
         {/* 1. wallet */}
         <section>
           <h2 className="label">1. Owner wallet</h2>
-          {isConnected ? <code className="text-sm text-muted">{address}</code> : <ConnectButton />}
+          {isConnected ? <code className="text-sm text-muted">{address}</code> : <ConnectWallet />}
         </section>
 
         {/* 2. network */}

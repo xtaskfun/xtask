@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useSwitchChain, useWriteContract } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import ConnectWallet from "@/components/ConnectWallet";
 import { erc20Abi, formatUnits, parseEventLogs, parseUnits, zeroAddress } from "viem";
 import TaskCard from "@/components/TaskCard";
 import { errMsg } from "@/app/tasks/[id]/TaskRunner";
@@ -320,7 +320,7 @@ export default function CreatePage() {
           ) : (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line p-5">
               <p className="text-sm text-muted">Connect a wallet to fund this task.</p>
-              <ConnectButton />
+              <ConnectWallet />
             </div>
           )}
           {!escrow && <p className="text-center text-xs text-muted">Demo mode — the escrow contract isn&apos;t connected yet, nothing will be charged.</p>}

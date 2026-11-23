@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import ConnectWallet from "./ConnectWallet";
 import Logo from "./Logo";
 import XConnect from "./XConnect";
 import { VERIFICATION_MODE } from "@/lib/site";
@@ -45,12 +45,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-2">
           {VERIFICATION_MODE === "x" && <XConnect />}
-          <ConnectButton
-            label="Connect Wallet"
-            accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-            chainStatus={{ smallScreen: "icon", largeScreen: "full" }}
-            showBalance={{ smallScreen: false, largeScreen: true }}
-          />
+          <ConnectWallet />
           </div>
         </div>
       </header>

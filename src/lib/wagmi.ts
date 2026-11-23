@@ -1,65 +1,25 @@
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
-import {
-  metaMaskWallet,
-  rainbowWallet,
-  coinbaseWallet,
-  walletConnectWallet,
-  trustWallet,
-  okxWallet,
-  bitgetWallet,
-  phantomWallet,
-  rabbyWallet,
-  binanceWallet,
-  zerionWallet,
-  safeWallet,
-  ledgerWallet,
-  injectedWallet,
-} from "@rainbow-me/rainbowkit/wallets";
-import { createConfig, http } from "wagmi";
-import { mainnet, base, baseSepolia, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
+import { createConfig } from "@privy-io/wagmi";
+import { http } from "wagmi";
+import { base, baseSepolia, mainnet } from "wagmi/chains";
 import { robinhood } from "./chains";
 
-export const projectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
+/** Privy app (public id). NEXT_PUBLIC_PRIVY_APP_ID overrides it. */
+export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "cmwt6o5ni01jq0gl8911bsvps";
 
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: "Popular",
-      wallets: [metaMaskWallet, okxWallet, trustWallet, coinbaseWallet, walletConnectWallet],
-    },
-    {
-      groupName: "More wallets",
-      wallets: [
-        phantomWallet,
-        rabbyWallet,
-        bitgetWallet,
-        binanceWallet,
-        rainbowWallet,
-        zerionWallet,
-        safeWallet,
-        ledgerWallet,
-        injectedWallet,
-      ],
-    },
-  ],
-  { appName: "xtask.fun", projectId }
-);
+/** Optional: your own WalletConnect (Reown) project id, used by Privy for mobile wallets. */
+export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || undefined;
 
-export const chains = [base, robinhood, mainnet, arbitrum, optimism, polygon, bsc, baseSepolia] as const;
+// Networks the app works with. Mainnet is only here so wallets on Ethereum can connect.
+export const chains = [base, robinhood, baseSepolia, mainnet] as const;
 
+// Wallet connections are handled by Privy; wagmi just reads/writes through them.
 export const wagmiConfig = createConfig({
-  connectors,
   chains,
   transports: {
     [base.id]: http(),
-    [mainnet.id]: http(),
-    [arbitrum.id]: http(),
-    [optimism.id]: http(),
-    [polygon.id]: http(),
-    [bsc.id]: http(),
-    [baseSepolia.id]: http(),
     [robinhood.id]: http(),
+    [baseSepolia.id]: http(),
+    [mainnet.id]: http(),
   },
   ssr: true,
 });

@@ -1,26 +1,52 @@
 "use client";
 
-import "@rainbow-me/rainbowkit/styles.css";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
 import { useState } from "react";
-import { wagmiConfig } from "@/lib/wagmi";
+import { base } from "@/lib/chains";
+import { PRIVY_APP_ID, WALLETCONNECT_PROJECT_ID, chains, wagmiConfig } from "@/lib/wagmi";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        loginMethods: ["wallet"],
+        appearance: {
+          theme: "dark",
+          accentColor: "#ffffff",
+          logo: "/logo.png",
+          landingHeader: "Connect your wallet",
+          walletChainType: "ethereum-only",
+          showWalletLoginFirst: true,
+          walletList: [
+            "detected_ethereum_wallets",
+            "metamask",
+            "okx_wallet",
+            "robinhood_wallet",
+            "coinbase_wallet",
+            "binance",
+            "bitget_wallet",
+            "rainbow",
+            "phantom",
+            "zerion",
+            "bybit_wallet",
+            "safe",
+            "wallet_connect",
+          ],
+        },
+        // External wallets only — no Privy embedded wallets are created.
+        embeddedWallets: { ethereum: { createOnLogin: "off" } },
+        defaultChain: base,
+        supportedChains: [...chains],
+        walletConnectCloudProjectId: WALLETCONNECT_PROJECT_ID,
+      }}
+    >
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          locale="en-US"
-          modalSize="wide"
-          theme={darkTheme({ accentColor: "#ffffff", accentColorForeground: "#000000", borderRadius: "large" })}
-          appInfo={{ appName: "xtask.fun", learnMoreUrl: "https://xtask.fun" }}
-        >
-          {children}
-        </RainbowKitProvider>
+        <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 }

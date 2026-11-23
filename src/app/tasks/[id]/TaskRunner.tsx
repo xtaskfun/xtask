@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWriteContract } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import ConnectWallet from "@/components/ConnectWallet";
 import { BaseError } from "viem";
 import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { escrowAbi } from "@/lib/escrow";
@@ -181,7 +181,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
     return (
       <div className="mt-4 rounded-xl border border-dashed border-line p-6 text-center">
         <p className="mb-4 text-sm text-muted">Connect your wallet to start this task.</p>
-        <div className="flex justify-center"><ConnectButton /></div>
+        <div className="flex justify-center"><ConnectWallet /></div>
       </div>
     );
   }

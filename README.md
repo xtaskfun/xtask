@@ -18,14 +18,14 @@ smart contract.
 - **Escrow smart contract** — funds are held by the contract, not by xtask. Reward and number of people set by the creator (up to 10,000),
   one claim per wallet, unclaimed slots refundable to the creator after the task ends (30 days).
 - **Multi-chain** — Base and Robinhood Chain (plus Base Sepolia for testing).
-- **Many wallets** — MetaMask, OKX, Trust, Coinbase, WalletConnect, Phantom, Rabby, Bitget,
-  Binance, Rainbow, Zerion, Safe, Ledger and any browser wallet (RainbowKit).
+- **Many wallets** — connected with [Privy](https://privy.io): MetaMask, OKX, Robinhood Wallet,
+  Coinbase, Binance, Bitget, Rainbow, Phantom, Zerion, Bybit, Safe, WalletConnect and any browser wallet.
 - **Optional X verification** — X login (OAuth 2.0) and checks through the X API.
 
 ## Stack
 
 - Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
-- RainbowKit, wagmi, viem
+- Privy (wallet login), wagmi, viem
 - Solidity 0.8.24 + OpenZeppelin, Hardhat
 - Upstash Redis (only for X verification mode)
 - Vitest
@@ -33,7 +33,7 @@ smart contract.
 ## Getting started
 
 ```bash
-cp .env.example .env.local   # set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID (free at https://cloud.reown.com)
+cp .env.example .env.local   # optional: your own Privy app id / WalletConnect project id
 npm install
 npm run dev
 ```
@@ -147,7 +147,8 @@ See [`.env.example`](.env.example). The minimum for a live site:
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect / mobile wallets |
+| `NEXT_PUBLIC_PRIVY_APP_ID` | Privy app (defaults to the xtask.fun app; add your domains in the Privy dashboard) |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Optional: your own WalletConnect project id for mobile wallets |
 | `NEXT_PUBLIC_ESCROW_ADDRESS` + `NEXT_PUBLIC_ESCROW_CHAIN_ID` (or the per-network vars) | Escrow contracts |
 | `SIGNER_PRIVATE_KEY` | Claim signer (server only — keep it secret, store it as a sensitive variable) |
 
