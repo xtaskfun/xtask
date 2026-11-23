@@ -14,6 +14,8 @@ import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
 
 const MAX_META_BYTES = 1024;
+/** Every task runs this long; after that the creator can refund unclaimed slots. */
+const TASK_DURATION_DAYS = 30;
 
 /**
  * Reads symbol() and decimals() of every listed ERC20 on its chain and keeps only the
@@ -63,7 +65,6 @@ export default function CreatePage() {
     actions: ["follow", "like"] as TaskAction[],
     token: "USDC",
     pool: "100",
-    days: 7,
     category: "Project" as Category,
   });
   const [step, setStep] = useState<"" | "switch" | "approve" | "create" | "confirm" | "done">("");
@@ -123,7 +124,7 @@ export default function CreatePage() {
     token: tokenSymbol,
     slots: SLOTS,
     filled: 0,
-    endsAt: new Date(Date.now() + form.days * 86_400_000).toISOString(),
+    endsAt: new Date(Date.now() + TASK_DURATION_DAYS * 86_400_000).toISOString(),
     category: form.category,
   };
 
@@ -163,7 +164,7 @@ export default function CreatePage() {
       }
 
       setStep("create");
-      const endsAt = BigInt(Math.floor(Date.now() / 1000) + form.days * 86_400);
+      const endsAt = BigInt(Math.floor(Date.now() / 1000) + TASK_DURATION_DAYS * 86_400);
       const hash = await writeContractAsync({
         address: ESCROW_ADDRESS,
         abi: escrowAbi,
@@ -277,10 +278,6 @@ export default function CreatePage() {
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">{tokenSymbol}</span>
               </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className="label">Duration: {form.days} days</label>
-              <input type="range" min={1} max={30} value={form.days} onChange={(e) => set("days", Number(e.target.value))} className="w-full accent-white" />
-            </div>
           </div>
 
           <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
@@ -288,7 +285,7 @@ export default function CreatePage() {
             <div className="flex justify-between"><span className="text-muted">Reward per person (1%)</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
             <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You deposit</span><span className="text-rainbow">{poolNum.toLocaleString()} {tokenSymbol}</span></div>
             <p className="pt-1 text-xs text-muted">
-              Funds are held by the escrow smart contract, not by xtask. Slots nobody claimed are refundable to you after the task ends.
+              Funds are held by the escrow smart contract, not by xtask. The task runs for {TASK_DURATION_DAYS} days; slots nobody claimed are refundable to you after that.
             </p>
           </div>
 
