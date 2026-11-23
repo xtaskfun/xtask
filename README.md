@@ -69,9 +69,10 @@ tests/                    Unit tests
 
 The escrow contract is [`contracts/contracts/XTaskEscrow.sol`](contracts/contracts/XTaskEscrow.sol).
 
-1. **Create** — the creator picks the reward per person and the number of people (1–10,000)
-   and pays reward × people plus a **5% platform fee** (ERC20 or native ETH). The fee is 5% of
-   the total paid — e.g. a 9.5 pool costs 10 — and goes to the fee recipient right away.
+1. **Create** — the creator enters a **total budget** and the number of people (1–10,000).
+   A **5% platform fee** is taken out of the budget (no extra cost) and goes to the fee
+   recipient right away; the rest is split equally. E.g. 10 USDC for 100 people → 0.5 fee,
+   9.5 pool, 0.095 each. ERC20 or native ETH.
 2. **Claim** — the site asks `/api/claim` for a signature (EIP-712) made by the **signer** key,
    then the user calls `claim()` and receives the reward from the contract. One claim per wallet,
    no more claims than people set, signatures expire after 10 minutes.

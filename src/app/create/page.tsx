@@ -12,7 +12,7 @@ import { ESCROWS, MAX_SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
 import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
-import { DEFAULT_FEE_BPS, quote } from "@/lib/fees";
+import { DEFAULT_FEE_BPS, quote, rewardForBudget } from "@/lib/fees";
 
 const MAX_META_BYTES = 1024;
 
@@ -69,7 +69,7 @@ export default function CreatePage() {
     targetUrl: "",
     actions: ["follow", "like"] as TaskAction[],
     token: "USDC",
-    reward: "1",
+    budget: "10",
     slots: "100",
     category: "Project" as Category,
   });
@@ -84,17 +84,19 @@ export default function CreatePage() {
   const token = available.find((t) => t.symbol === form.token) ?? available[0];
   const tokenSymbol = token?.symbol ?? form.token;
 
-  // The creator picks the reward per person and how many people; the deposit is reward x slots.
+  // The creator enters a total budget and how many people. The platform fee is taken out of
+  // the budget (no extra cost); what's left is split equally as the reward per person.
   const decimals = token?.decimals ?? 18;
-  const rewardRaw = useMemo(() => {
+  const budgetRaw = useMemo(() => {
     try {
-      return parseUnits(form.reward || "0", decimals);
+      return parseUnits(form.budget || "0", decimals);
     } catch {
       return 0n;
     }
-  }, [form.reward, decimals]);
+  }, [form.budget, decimals]);
   const slots = Math.floor(Number(form.slots) || 0);
   const slotsOk = slots >= 1 && slots <= MAX_SLOTS;
+  const rewardRaw = slotsOk && feeBps !== undefined ? rewardForBudget(budgetRaw, slots, feeBps) : 0n;
   const { pool, fee, total: amount } = slotsOk && feeBps !== undefined ? quote(rewardRaw, slots, feeBps) : { pool: 0n, fee: 0n, total: 0n };
   const fmt = (v: bigint) => Number(formatUnits(v, decimals)).toLocaleString(undefined, { maximumFractionDigits: 6 });
   const perUser = Number(formatUnits(rewardRaw, decimals));
@@ -208,7 +210,7 @@ export default function CreatePage() {
     <div className="py-10">
       <h1 className="text-3xl font-bold">Create a task</h1>
       <p className="mt-1 text-muted">
-        Set the reward per person and how many people can claim it. You pay the total up front, including a {(feeBps ?? DEFAULT_FEE_BPS) / 100}% platform fee.
+        Set your total budget and how many people can claim. The {(feeBps ?? DEFAULT_FEE_BPS) / 100}% platform fee is taken from the budget — no extra cost.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -282,9 +284,9 @@ export default function CreatePage() {
               </select>
             </div>
             <div>
-              <label className="label">Reward per person</label>
+              <label className="label">Total budget</label>
               <div className="relative">
-                <input type="number" min={0} step="any" className="input pr-16" value={form.reward} onChange={(e) => set("reward", e.target.value)} />
+                <input type="number" min={0} step="any" className="input pr-16" value={form.budget} onChange={(e) => set("budget", e.target.value)} />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">{tokenSymbol}</span>
               </div>
             </div>
@@ -296,11 +298,13 @@ export default function CreatePage() {
           </div>
 
           <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
-            <div className="flex justify-between"><span className="text-muted">Reward per person</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
-            <div className="flex justify-between"><span className="text-muted">People</span><span>× {slotsOk ? slots.toLocaleString() : "–"}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Total budget</span><span>{fmt(amount)} {tokenSymbol}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Platform fee ({feeBps === undefined ? "…" : feeBps / 100}%)</span><span>− {fmt(fee)} {tokenSymbol}</span></div>
             <div className="flex justify-between"><span className="text-muted">Reward pool</span><span>{fmt(pool)} {tokenSymbol}</span></div>
-            <div className="flex justify-between"><span className="text-muted">Platform fee ({feeBps === undefined ? "…" : feeBps / 100}%)</span><span>{fmt(fee)} {tokenSymbol}</span></div>
-            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You pay</span><span className="text-rainbow">{fmt(amount)} {tokenSymbol}</span></div>
+            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>Each person gets</span><span className="text-rainbow">{perUser.toLocaleString(undefined, { maximumFractionDigits: 6 })} {tokenSymbol}</span></div>
+            {budgetRaw > 0n && slotsOk && rewardRaw === 0n && feeBps !== undefined && (
+              <p className="text-xs text-red-400">Budget is too small for this many people.</p>
+            )}
             <p className="pt-1 text-xs text-muted">
               Funds are held by the escrow smart contract, not by xtask. The task runs for {TASK_DURATION_DAYS} days; slots nobody claimed are refundable to you after that.
             </p>
