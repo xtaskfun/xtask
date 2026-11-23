@@ -10,6 +10,7 @@ import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 import { ACTION_META, CATEGORIES, Category, Task, TaskAction, TaskMeta } from "@/lib/tasks";
 import { ESCROW_ADDRESS, ESCROW_CHAIN, ESCROW_CHAIN_ID, SLOTS, escrowAbi } from "@/lib/escrow";
 import { TOKENS } from "@/lib/tokens";
+import { parseTarget, targetSupports } from "@/lib/x/target";
 
 const MAX_META_BYTES = 1024;
 const tokens = TOKENS[ESCROW_CHAIN_ID] ?? [];
@@ -64,8 +65,16 @@ export default function CreatePage() {
   const metaJson = JSON.stringify(meta);
   const metaTooLong = new TextEncoder().encode(metaJson).length > MAX_META_BYTES;
 
-  const valid =
-    meta.title && /^https?:\/\/(x|twitter)\.com\//i.test(meta.targetUrl) && form.actions.length && amount > 0n && !metaTooLong;
+  const target = parseTarget(meta.targetUrl);
+  const urlError = !meta.targetUrl
+    ? ""
+    : !target
+      ? "Use an X link like https://x.com/yourproject or https://x.com/yourproject/status/123…"
+      : !targetSupports(target, form.actions)
+        ? "Like, repost, reply and quote need a link to a specific post (…/status/…)."
+        : "";
+
+  const valid = meta.title && target && !urlError && form.actions.length && amount > 0n && !metaTooLong;
 
   const preview: Task = {
     id: "preview",
@@ -172,6 +181,7 @@ export default function CreatePage() {
               <label className="label">Tweet / profile URL</label>
               <input className="input" maxLength={200} placeholder="https://x.com/yourproject/status/…" value={form.targetUrl} onChange={(e) => set("targetUrl", e.target.value)} />
             </div>
+            {urlError && <p className="text-sm text-red-400 sm:col-span-2">{urlError}</p>}
           </div>
 
           <div>

@@ -44,7 +44,39 @@ Dana task disimpan di smart contract `contracts/contracts/XTaskEscrow.sol`:
 Cara deploy & env lengkap: lihat [`contracts/README.md`](contracts/README.md).
 Selama `NEXT_PUBLIC_ESCROW_ADDRESS` belum diisi, situs memakai data demo.
 
+## Login X & verifikasi
+User login dengan akun X (OAuth 2.0). Saat klik **verify** / **Claim**, server mengecek lewat X API:
+
+| Aksi | Dicek dari |
+|---|---|
+| Follow | daftar following user (sampai 5.000 akun) |
+| Like | 200 like terakhir user |
+| Repost / Reply / Quote | 200 post terakhir user |
+
+Aturan anti-curang:
+- 1 akun X hanya bisa claim **sekali per task** (disimpan di Redis), 1 wallet juga sekali (di contract)
+- akun X minimal 30 hari & 5 follower (atur di `X_MIN_ACCOUNT_AGE_DAYS`, `X_MIN_FOLLOWERS`)
+
+### Setup
+1. **X Developer:** buka developer.x.com → buat Project + App → *User authentication settings*:
+   - App permissions: **Read**
+   - Type of App: **Web App (confidential client)**
+   - Callback URI: `https://DOMAIN-KAMU/api/auth/x/callback` (harus sama persis dengan `NEXT_PUBLIC_SITE_URL`)
+   - Website URL: `https://DOMAIN-KAMU`
+   
+   Lalu salin **OAuth 2.0 Client ID & Client Secret**. Paket API X harus mengizinkan
+   endpoint *follows*, *likes* dan *user timeline* (cek harga di developer.x.com).
+2. **Database:** di Vercel → *Storage* → buat **Upstash Redis** dan hubungkan ke project
+   (env `KV_REST_API_URL` / `KV_REST_API_TOKEN` terisi otomatis).
+3. **Env di Vercel:** `X_CLIENT_ID`, `X_CLIENT_SECRET`, `SESSION_SECRET` (acak 32+ karakter),
+   `NEXT_PUBLIC_SITE_URL`. Lihat `.env.example` untuk semua opsi.
+4. Redeploy.
+
+## Test
+```bash
+npm test                      # unit test web (verifikasi X, session, store)
+cd contracts && npm test      # test smart contract
+```
+
 ## Langkah berikutnya (TODO)
-- **Wajib sebelum mainnet:** login X (OAuth 2.0) & verifikasi aksi lewat X API
-  (`verifyXActions` di `src/app/api/claim/route.ts`), plus database agar 1 akun X hanya bisa claim sekali per task
-- Audit smart contract
+- Audit smart contract sebelum mainnet

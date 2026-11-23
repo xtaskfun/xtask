@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Logo from "./Logo";
+import XConnect from "./XConnect";
 
 export const NAV = [
   { href: "/", label: "Home", icon: "🏠" },
@@ -22,7 +23,7 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-8 min-w-0">
             <Logo />
             <nav className="hidden items-center gap-1 md:flex">
               {NAV.map((n) => (
@@ -40,12 +41,15 @@ export default function Navbar() {
               ))}
             </nav>
           </div>
+          <div className="flex items-center gap-2">
+          <XConnect />
           <ConnectButton
             label="Connect Wallet"
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
             chainStatus={{ smallScreen: "icon", largeScreen: "full" }}
             showBalance={{ smallScreen: false, largeScreen: true }}
           />
+          </div>
         </div>
       </header>
 

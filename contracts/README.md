@@ -42,16 +42,12 @@ npm run export-abi          # regenerate ../src/lib/escrow-abi.ts after changing
    | `NEXT_PUBLIC_ESCROW_ADDRESS` | address printed by the deploy |
    | `NEXT_PUBLIC_ESCROW_CHAIN_ID` | `84532` (Base Sepolia) or `8453` (Base) |
    | `SIGNER_PRIVATE_KEY` | private key of the **signer** wallet |
-   | `CLAIM_VERIFICATION` | `off` — **testnet only**, see below |
-4. Redeploy the site.
+4. Set up X login + database — see the main [README](../README.md#login-x--verifikasi).
+5. Redeploy the site.
+
+`CLAIM_VERIFICATION=off` skips X verification so **anyone can claim every slot**. Only for a
+quick testnet try-out; never set it on mainnet.
 
 ## ⚠️ Before mainnet
 
-`verifyXActions()` in `src/app/api/claim/route.ts` is not implemented yet. With
-`CLAIM_VERIFICATION=off` **anyone can claim every slot without doing the task**. Use it only
-on testnet. Before real money:
-
-- add X login (OAuth 2.0) and link the X account to the wallet
-- check follow/like/repost/reply/quote through the X API
-- store claims in a database so one X account can't claim the same task with many wallets
 - get the contract audited

@@ -6,8 +6,10 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BaseError } from "viem";
 import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { ESCROW_ADDRESS, ESCROW_CHAIN_ID, escrowAbi } from "@/lib/escrow";
+import { useXSession } from "@/lib/useXSession";
+import { XConnectButton } from "@/components/XConnect";
 
-type Status = "todo" | "verifying" | "done";
+type Status = "todo" | "done" | "missing";
 
 export function errMsg(e: unknown) {
   if (e instanceof BaseError) return e.shortMessage;
@@ -21,8 +23,9 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient({ chainId: ESCROW_CHAIN_ID });
 
+  const x = useXSession();
   const [status, setStatus] = useState<Record<string, Status>>({});
-  const [busy, setBusy] = useState<"claim" | "refund" | null>(null);
+  const [busy, setBusy] = useState<"verify" | "claim" | "refund" | null>(null);
   const [error, setError] = useState("");
   const [demoClaimed, setDemoClaimed] = useState(false);
 
@@ -42,11 +45,33 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const isCreator = !!onchain && !!address && onchain.creator.toLowerCase() === address.toLowerCase();
   const allDone = task.actions.every((a) => status[a] === "done");
 
-  // Marks the step as done in the UI; the real check happens on the server when claiming.
-  const verify = (a: TaskAction) => {
-    setStatus((s) => ({ ...s, [a]: "verifying" }));
-    setTimeout(() => setStatus((s) => ({ ...s, [a]: "done" })), 1200);
-  };
+  // Asks the server to check every action on X. The claim re-checks server-side.
+  async function verify() {
+    setError("");
+    setBusy("verify");
+    try {
+      if (!onchain) {
+        await new Promise((r) => setTimeout(r, 900)); // demo
+        setStatus(Object.fromEntries(task.actions.map((a) => [a, "done"])));
+        return;
+      }
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: task.id }),
+      });
+      const data = await res.json();
+      if (res.status === 401) x.refetch();
+      if (!res.ok) throw new Error(data.error || "Verification failed");
+      const actions = data.actions as Partial<Record<TaskAction, boolean>>;
+      setStatus(Object.fromEntries(task.actions.map((a) => [a, actions[a] ? "done" : "missing"])));
+      if (!data.ok) setError("Some actions weren't found on X yet. Finish them, wait a moment and check again.");
+    } catch (e) {
+      setError(errMsg(e));
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function ensureChain() {
     if (chainId !== ESCROW_CHAIN_ID) await switchChainAsync({ chainId: ESCROW_CHAIN_ID });
@@ -132,6 +157,8 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
     );
   }
 
+  const needX = !!onchain && !claimed && !x.user;
+
   const claimLabel = claimed
     ? "🎉 Reward claimed"
     : busy === "claim"
@@ -144,28 +171,48 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
 
   return (
     <div className="mt-4 space-y-3">
+      {needX && (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line p-5 text-center">
+          <p className="text-sm text-muted">Connect your X account so we can check your actions.</p>
+          {x.isLoading ? null : x.configured ? (
+            <XConnectButton full />
+          ) : (
+            <p className="text-sm text-red-400">X login isn&apos;t set up on this server yet.</p>
+          )}
+        </div>
+      )}
+
       {task.actions.map((a, i) => {
-        const st = claimed ? "done" : (status[a] ?? "todo");
+        const st: Status = claimed ? "done" : (status[a] ?? "todo");
         return (
           <div key={a} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
             <div className="flex items-center gap-3">
-              <span className={`grid h-8 w-8 place-items-center rounded-full text-sm ${st === "done" ? "bg-rainbow font-bold text-black" : "bg-white/10"}`}>
-                {st === "done" ? "✓" : i + 1}
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm ${
+                  st === "done" ? "bg-rainbow font-bold text-black" : st === "missing" ? "bg-red-500/20 text-red-400" : "bg-white/10"
+                }`}
+              >
+                {st === "done" ? "✓" : st === "missing" ? "!" : i + 1}
               </span>
               <div>
                 <div className="font-medium">{ACTION_META[a].icon} {ACTION_META[a].label}</div>
-                <div className="text-xs text-muted">{task.creator}</div>
+                <div className="text-xs text-muted">{st === "missing" ? "Not found on X yet" : task.creator}</div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <a href={task.targetUrl} target="_blank" rel="noreferrer noopener" className="btn-ghost px-4 py-2">Go</a>
-              <button className="btn-primary px-4 py-2" disabled={st !== "todo" || ended || full} onClick={() => verify(a)}>
-                {st === "verifying" ? "Checking…" : st === "done" ? "Done" : "Verify"}
-              </button>
-            </div>
+            <a href={task.targetUrl} target="_blank" rel="noreferrer noopener" className="btn-ghost px-4 py-2">Go</a>
           </div>
         );
       })}
+
+      {!allDone && !claimed && (
+        <button
+          className="btn-rainbow mt-2 w-full py-3"
+          disabled={!!busy || needX || ended || full}
+          onClick={verify}
+        >
+          {busy === "verify" ? "Checking on X…" : "I did it — verify on X"}
+        </button>
+      )}
 
       <button
         className="btn-primary mt-2 w-full py-3"
