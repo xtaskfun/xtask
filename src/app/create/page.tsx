@@ -97,7 +97,8 @@ export default function CreatePage() {
     targetUrl: form.targetUrl.trim(),
     actions: form.actions,
     category: form.category,
-    handle: form.handle.replace(/^@/, "").trim(),
+    // Empty handle → use the account from the link
+    handle: form.handle.replace(/^@/, "").trim() || (parseTarget(form.targetUrl.trim())?.handle ?? ""),
   };
   const metaJson = JSON.stringify(meta);
   const metaTooLong = new TextEncoder().encode(metaJson).length > MAX_META_BYTES;
@@ -206,7 +207,7 @@ export default function CreatePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Your X handle</label>
-              <input className="input" maxLength={31} placeholder="@yourproject" value={form.handle} onChange={(e) => set("handle", e.target.value)} />
+              <input className="input" maxLength={31} placeholder="@yourproject (optional — taken from the link)" value={form.handle} onChange={(e) => set("handle", e.target.value)} />
             </div>
             <div>
               <label className="label">Tweet / profile URL</label>

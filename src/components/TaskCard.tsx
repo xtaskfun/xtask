@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ACTION_META, Task, daysLeft } from "@/lib/tasks";
 import { ESCROW_CHAINS } from "@/lib/chains";
+import XAvatar from "./XAvatar";
 
 export function ActionPills({ actions }: { actions: Task["actions"] }) {
   return (
@@ -39,9 +40,13 @@ export default function TaskCard({ task }: { task: Task }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
-            {task.creator.replace(/^@|^0x/, "").slice(0, 2).toUpperCase()}
-          </span>
+          {task.creator.startsWith("@") ? (
+            <XAvatar handle={task.creator} />
+          ) : (
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
+              {task.creator.replace(/^0x/, "").slice(0, 2).toUpperCase()}
+            </span>
+          )}
           {task.creator}
         </div>
         <div className="flex gap-1.5">
