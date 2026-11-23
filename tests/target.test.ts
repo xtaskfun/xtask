@@ -23,3 +23,18 @@ describe("parseTarget", () => {
     expect(targetSupports({ handle: "a", tweetId: "1" }, ["like", "retweet"])).toBe(true);
   });
 });
+
+import { autoTitle, parseMeta } from "@/lib/tasks";
+
+describe("autoTitle", () => {
+  it("builds a title from actions and the X account", () => {
+    expect(autoTitle(["follow", "like"], "https://x.com/Xtaskfun/status/1")).toBe("Follow + Like @Xtaskfun");
+    expect(autoTitle(["retweet"], "https://twitter.com/abc")).toBe("Repost @abc");
+    expect(autoTitle([], "")).toBe("Task");
+  });
+
+  it("is used when a task has no stored title", () => {
+    expect(parseMeta(JSON.stringify({ actions: ["follow"], targetUrl: "https://x.com/proj" })).title).toBe("Follow @proj");
+    expect(parseMeta(JSON.stringify({ title: "Custom", actions: ["follow"] })).title).toBe("Custom");
+  });
+});

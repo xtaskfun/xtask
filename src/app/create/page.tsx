@@ -7,7 +7,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { erc20Abi, formatUnits, parseEventLogs, parseUnits, zeroAddress } from "viem";
 import TaskCard from "@/components/TaskCard";
 import { errMsg } from "@/app/tasks/[id]/TaskRunner";
-import { ACTION_META, CATEGORIES, Category, Task, TaskAction, TaskMeta } from "@/lib/tasks";
+import { ACTION_META, CATEGORIES, Category, Task, TaskAction, TaskMeta, autoTitle } from "@/lib/tasks";
 import { ESCROWS, SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
 import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
@@ -58,8 +58,6 @@ export default function CreatePage() {
   const { tokens, checking } = useVerifiedTokens(netId);
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
     handle: "",
     targetUrl: "",
     actions: ["follow", "like"] as TaskAction[],
@@ -92,8 +90,9 @@ export default function CreatePage() {
   const perUser = Number(formatUnits(amount / BigInt(SLOTS), token?.decimals ?? 18));
 
   const meta: TaskMeta = {
-    title: form.title.trim(),
-    description: form.description.trim(),
+    // Title is generated from the actions + X account; no description needed.
+    title: autoTitle(form.actions, form.targetUrl.trim()),
+    description: "",
     targetUrl: form.targetUrl.trim(),
     actions: form.actions,
     category: form.category,
@@ -111,12 +110,12 @@ export default function CreatePage() {
         ? "Like, repost, reply and quote need a link to a specific post (…/status/…)."
         : "";
 
-  const valid = meta.title && target && !urlError && form.actions.length && amount > 0n && !metaTooLong;
+  const valid = target && !urlError && form.actions.length && amount > 0n && !metaTooLong;
 
   const preview: Task = {
     id: "preview",
     title: meta.title || "Your task title",
-    description: meta.description || "Describe what users need to do.",
+    description: "",
     creator: meta.handle ? `@${meta.handle}` : "@you",
     actions: form.actions,
     targetUrl: meta.targetUrl,
@@ -203,14 +202,6 @@ export default function CreatePage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
         <form className="space-y-6 rounded-2xl border border-line bg-card p-6" onSubmit={submit}>
-          <div>
-            <label className="label">Title</label>
-            <input className="input" maxLength={100} placeholder="e.g. Follow & repost our launch" value={form.title} onChange={(e) => set("title", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Description</label>
-            <textarea className="input min-h-24" maxLength={500} placeholder="Explain what users should do" value={form.description} onChange={(e) => set("description", e.target.value)} />
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Your X handle</label>
@@ -301,7 +292,7 @@ export default function CreatePage() {
             </p>
           </div>
 
-          {metaTooLong && <p className="text-sm text-red-400">Title + description are too long.</p>}
+          {metaTooLong && <p className="text-sm text-red-400">The link or handle is too long.</p>}
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           {isConnected ? (

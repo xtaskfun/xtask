@@ -53,6 +53,13 @@ export function safeUrl(u: unknown) {
   }
 }
 
+/** Title built from the actions and the X account, e.g. "Follow + Like @Xtaskfun". */
+export function autoTitle(actions: TaskAction[], targetUrl: string) {
+  const who = /^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})/i.exec(targetUrl)?.[1];
+  const what = actions.map((a) => ACTION_META[a].label).join(" + ") || "Task";
+  return who ? `${what} @${who}` : what;
+}
+
 export function parseMeta(raw: string): TaskMeta {
   let m: Record<string, unknown> = {};
   try {
@@ -61,11 +68,13 @@ export function parseMeta(raw: string): TaskMeta {
   } catch {}
   const str = (v: unknown, max: number, d = "") => (typeof v === "string" ? v.slice(0, max) : d);
   const handle = str(m.handle, 30).replace(/[^A-Za-z0-9_]/g, "");
+  const actions = Array.isArray(m.actions) ? m.actions.filter(isAction) : [];
+  const targetUrl = safeUrl(m.targetUrl);
   return {
-    title: str(m.title, 100, "Untitled task"),
+    title: str(m.title, 100) || autoTitle(actions, targetUrl),
     description: str(m.description, 500),
-    targetUrl: safeUrl(m.targetUrl),
-    actions: Array.isArray(m.actions) ? m.actions.filter(isAction) : [],
+    targetUrl,
+    actions,
     category: CATEGORIES.includes(m.category as Category) ? (m.category as Category) : "Project",
     handle: handle ? `@${handle}` : "",
   };

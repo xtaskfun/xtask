@@ -56,7 +56,7 @@ export default function TaskCard({ task }: { task: Task }) {
 
       <div>
         <h3 className="font-semibold">{task.title}</h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted">{task.description}</p>
+        {task.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{task.description}</p>}
       </div>
 
       <ActionPills actions={task.actions} />
