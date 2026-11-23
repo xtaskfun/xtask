@@ -2,25 +2,60 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContracts, useSwitchChain, useWriteContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { erc20Abi, formatUnits, parseEventLogs, parseUnits, zeroAddress } from "viem";
 import TaskCard from "@/components/TaskCard";
 import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 import { ACTION_META, CATEGORIES, Category, Task, TaskAction, TaskMeta } from "@/lib/tasks";
-import { ESCROW_ADDRESS, ESCROW_CHAIN, ESCROW_CHAIN_ID, SLOTS, escrowAbi } from "@/lib/escrow";
-import { TOKENS } from "@/lib/tokens";
+import { ESCROWS, SLOTS, escrowAbi, taskKey } from "@/lib/escrow";
+import { base } from "@/lib/chains";
+import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
 
 const MAX_META_BYTES = 1024;
-const tokens = TOKENS[ESCROW_CHAIN_ID] ?? [];
+
+/**
+ * Reads symbol() and decimals() of every listed ERC20 on its chain and keeps only the
+ * tokens whose on-chain values match our list — protects creators from a wrong address.
+ */
+function useVerifiedTokens(chainId: number) {
+  const listed = TOKENS[chainId] ?? [];
+  const erc20s = listed.filter((t) => t.address !== zeroAddress);
+  const q = useReadContracts({
+    contracts: erc20s.flatMap((t) => [
+      { address: t.address, abi: erc20Abi, functionName: "symbol" as const, chainId },
+      { address: t.address, abi: erc20Abi, functionName: "decimals" as const, chainId },
+    ]),
+    query: { staleTime: 10 * 60_000 },
+  });
+  return useMemo(() => {
+    const ok = new Set<string>();
+    erc20s.forEach((t, i) => {
+      const sym = q.data?.[i * 2];
+      const dec = q.data?.[i * 2 + 1];
+      if (sym?.status === "success" && dec?.status === "success" && sym.result === t.symbol && dec.result === t.decimals) ok.add(t.symbol);
+    });
+    const tokens: (Token & { available: boolean })[] = listed.map((t) => ({
+      ...t,
+      available: t.address === zeroAddress || ok.has(t.symbol),
+    }));
+    return { tokens, checking: q.isLoading };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.data, q.isLoading, chainId]);
+}
 
 export default function CreatePage() {
   const router = useRouter();
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
-  const publicClient = usePublicClient({ chainId: ESCROW_CHAIN_ID });
+  // Network: one of the deployed escrows, or Base for the demo.
+  const [netId, setNetId] = useState<number>(ESCROWS[0]?.chain.id ?? base.id);
+  const escrow = ESCROWS.find((e) => e.chain.id === netId);
+  const netName = escrow?.chain.name ?? "Base";
+  const publicClient = usePublicClient({ chainId: netId });
+  const { tokens, checking } = useVerifiedTokens(netId);
 
   const [form, setForm] = useState({
     title: "",
@@ -28,7 +63,7 @@ export default function CreatePage() {
     handle: "",
     targetUrl: "",
     actions: ["follow", "like"] as TaskAction[],
-    token: tokens[0]?.symbol ?? "USDC",
+    token: "USDC",
     pool: "100",
     days: 7,
     category: "Project" as Category,
@@ -40,7 +75,9 @@ export default function CreatePage() {
   const toggleAction = (a: TaskAction) =>
     set("actions", form.actions.includes(a) ? form.actions.filter((x) => x !== a) : [...form.actions, a]);
 
-  const token = tokens.find((t) => t.symbol === form.token) ?? tokens[0];
+  const available = tokens.filter((t) => t.available);
+  const token = available.find((t) => t.symbol === form.token) ?? available[0];
+  const tokenSymbol = token?.symbol ?? form.token;
 
   // Pool in base units, rounded down so it splits into exactly 100 equal slots.
   const amount = useMemo(() => {
@@ -84,7 +121,7 @@ export default function CreatePage() {
     actions: form.actions,
     targetUrl: meta.targetUrl,
     rewardPerUser: perUser,
-    token: form.token,
+    token: tokenSymbol,
     slots: SLOTS,
     filled: 0,
     endsAt: new Date(Date.now() + form.days * 86_400_000).toISOString(),
@@ -94,8 +131,10 @@ export default function CreatePage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!ESCROW_ADDRESS) return setStep("done"); // demo mode
+    if (!escrow) return setStep("done"); // demo mode
     if (!token || !address || !publicClient) return;
+    const ESCROW_ADDRESS = escrow.address;
+    const ESCROW_CHAIN_ID = escrow.chain.id;
 
     try {
       if (chainId !== ESCROW_CHAIN_ID) {
@@ -138,7 +177,7 @@ export default function CreatePage() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       const [created] = parseEventLogs({ abi: escrowAbi, logs: receipt.logs, eventName: "TaskCreated" });
       setStep("done");
-      if (created) router.push(`/tasks/${created.args.taskId}`);
+      if (created) router.push(`/tasks/${taskKey(ESCROW_CHAIN_ID, created.args.taskId)}`);
     } catch (err) {
       setError(errMsg(err));
       setStep("");
@@ -147,9 +186,9 @@ export default function CreatePage() {
 
   const busy = step !== "" && step !== "done";
   const buttonLabel = {
-    "": `Deposit ${poolNum.toLocaleString()} ${form.token} & publish`,
-    switch: `Switching to ${ESCROW_CHAIN.name}…`,
-    approve: `Approving ${form.token}…`,
+    "": `Deposit ${poolNum.toLocaleString()} ${tokenSymbol} & publish`,
+    switch: `Switching to ${netName}…`,
+    approve: `Approving ${tokenSymbol}…`,
     create: "Confirm in wallet…",
     confirm: "Publishing…",
     done: "✅ Task published",
@@ -204,6 +243,24 @@ export default function CreatePage() {
             </div>
           </div>
 
+          {ESCROWS.length > 1 && (
+            <div>
+              <label className="label">Network</label>
+              <div className="grid grid-cols-2 gap-2">
+                {ESCROWS.map((e) => (
+                  <button
+                    type="button"
+                    key={e.chain.id}
+                    onClick={() => setNetId(e.chain.id)}
+                    className={`rounded-xl border p-3 text-sm transition ${netId === e.chain.id ? "border-rainbow text-white" : "border-line text-muted hover:text-white"}`}
+                  >
+                    {e.chain.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Category</label>
@@ -212,16 +269,21 @@ export default function CreatePage() {
               </select>
             </div>
             <div>
-              <label className="label">Reward token ({ESCROW_CHAIN.name})</label>
-              <select className="input" value={form.token} onChange={(e) => set("token", e.target.value)}>
-                {tokens.map((t) => <option key={t.symbol}>{t.symbol}</option>)}
+              <label className="label">Reward token</label>
+              <select className="input" value={tokenSymbol} onChange={(e) => set("token", e.target.value)}>
+                {tokens.map((t) => (
+                  <option key={t.symbol} value={t.symbol} disabled={!t.available}>
+                    {t.symbol}
+                    {!t.available && !checking ? " (unavailable)" : ""}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="sm:col-span-2">
               <label className="label">Total reward pool</label>
               <div className="relative">
                 <input type="number" min={0} step="any" className="input pr-16" value={form.pool} onChange={(e) => set("pool", e.target.value)} />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">{form.token}</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">{tokenSymbol}</span>
               </div>
             </div>
             <div className="sm:col-span-2">
@@ -232,8 +294,8 @@ export default function CreatePage() {
 
           <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
             <div className="flex justify-between"><span className="text-muted">Slots</span><span>{SLOTS} people</span></div>
-            <div className="flex justify-between"><span className="text-muted">Reward per person (1%)</span><span>{perUser.toLocaleString()} {form.token}</span></div>
-            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You deposit</span><span className="text-rainbow">{poolNum.toLocaleString()} {form.token}</span></div>
+            <div className="flex justify-between"><span className="text-muted">Reward per person (1%)</span><span>{perUser.toLocaleString()} {tokenSymbol}</span></div>
+            <div className="flex justify-between border-t border-line pt-2 font-semibold"><span>You deposit</span><span className="text-rainbow">{poolNum.toLocaleString()} {tokenSymbol}</span></div>
             <p className="pt-1 text-xs text-muted">
               Funds are held by the escrow smart contract, not by xtask. Slots nobody claimed are refundable to you after the task ends.
             </p>
@@ -252,7 +314,7 @@ export default function CreatePage() {
               <ConnectButton />
             </div>
           )}
-          {!ESCROW_ADDRESS && <p className="text-center text-xs text-muted">Demo mode — the escrow contract isn&apos;t connected yet, nothing will be charged.</p>}
+          {!escrow && <p className="text-center text-xs text-muted">Demo mode — the escrow contract isn&apos;t connected yet, nothing will be charged.</p>}
         </form>
 
         <div className="lg:sticky lg:top-24 lg:h-fit">

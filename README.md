@@ -44,6 +44,20 @@ Dana task disimpan di smart contract `contracts/contracts/XTaskEscrow.sol`:
 Cara deploy & env lengkap: lihat [`contracts/README.md`](contracts/README.md).
 Selama `NEXT_PUBLIC_ESCROW_ADDRESS` belum diisi, situs memakai data demo.
 
+## Jaringan (multi-chain)
+Satu kontrak escrow per jaringan, semuanya memakai **signer yang sama**. Isi env sesuai jaringan yang dipakai:
+
+| Jaringan | Env |
+|---|---|
+| Base | `NEXT_PUBLIC_ESCROW_ADDRESS` + `NEXT_PUBLIC_ESCROW_CHAIN_ID=8453` (atau `NEXT_PUBLIC_ESCROW_ADDRESS_BASE`) |
+| Robinhood Chain (4663) | `NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD` |
+| Base Sepolia (testnet) | `NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA` |
+
+Deploy lewat `/deploy` — halaman itu otomatis memakai signer dari kontrak yang sudah ada.
+
+Daftar token ada di `src/lib/tokens.ts`. Halaman Create mengecek `symbol()` & `decimals()` setiap token
+langsung di blockchain dan menonaktifkan token yang tidak cocok (pengaman jika alamat salah).
+
 ## Mode verifikasi
 Diatur lewat env `NEXT_PUBLIC_VERIFICATION_MODE`:
 

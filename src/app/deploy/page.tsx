@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useDeployContract, usePublicClient, useSwitchChain } from "wagmi";
-import { base, baseSepolia } from "wagmi/chains";
+import { useAccount, useDeployContract, usePublicClient, useReadContract, useSwitchChain } from "wagmi";
+import { base, baseSepolia, robinhood } from "@/lib/chains";
+import { ESCROWS } from "@/lib/escrow";
 import { encodeDeployData, getAddress, isAddress, type Address, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { escrowAbi } from "@/lib/escrow-abi";
@@ -11,8 +12,9 @@ import { escrowBytecode } from "@/lib/escrow-bytecode";
 import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 
 const NETWORKS = [
-  { chain: baseSepolia, label: "Base Sepolia", note: "Testnet — free test ETH, recommended first", explorer: "https://sepolia.basescan.org" },
-  { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org" },
+  { chain: baseSepolia, label: "Base Sepolia", note: "Testnet — free test ETH", explorer: "https://sepolia.basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA" },
+  { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE" },
+  { chain: robinhood, label: "Robinhood Chain", note: "Mainnet — real money", explorer: "https://robinhoodchain.blockscout.com", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD" },
 ] as const;
 
 const DEPLOY_PAGE_VERSION = "v3 (gas + fee preset)";
@@ -55,6 +57,15 @@ export default function DeployPage() {
   const { deployContractAsync } = useDeployContract();
 
   const [net, setNet] = useState<(typeof NETWORKS)[number]>(NETWORKS[0]);
+  // If an escrow already exists, every new one must use the SAME signer (the server has one key).
+  const existing = ESCROWS[0];
+  const existingSigner = useReadContract({
+    address: existing?.address,
+    abi: escrowAbi,
+    functionName: "signer",
+    chainId: existing?.chain.id,
+    query: { enabled: !!existing },
+  }).data;
   const publicClient = usePublicClient({ chainId: net.chain.id });
 
   const [signerKey, setSignerKey] = useState<Hex | null>(null);
@@ -66,8 +77,13 @@ export default function DeployPage() {
   const [deployed, setDeployed] = useState<{ address: Address; chainId: number; explorer: string } | null>(null);
 
   // The signer key is generated in this browser only — it is never sent anywhere.
-  const signerAddress = signerKey ? privateKeyToAccount(signerKey).address : isAddress(signerInput.trim()) ? getAddress(signerInput.trim()) : null;
-  const isMainnet = net.chain.id === base.id;
+  const signerAddress = signerKey
+    ? privateKeyToAccount(signerKey).address
+    : isAddress(signerInput.trim())
+      ? getAddress(signerInput.trim())
+      : existingSigner ?? null;
+  const isMainnet = net.chain.id !== baseSepolia.id;
+  const reuseSigner = !!existingSigner && !signerKey;
   const ready = isConnected && !!signerAddress && (!signerKey || savedKey) && (!isMainnet || mainnetOk);
 
   async function deploy() {
@@ -120,9 +136,9 @@ export default function DeployPage() {
   }
 
   if (deployed) {
+    const envKey = NETWORKS.find((n) => n.chain.id === deployed.chainId)?.envKey ?? "NEXT_PUBLIC_ESCROW_ADDRESS";
     const env = [
-      `NEXT_PUBLIC_ESCROW_ADDRESS=${deployed.address}`,
-      `NEXT_PUBLIC_ESCROW_CHAIN_ID=${deployed.chainId}`,
+      `${envKey}=${deployed.address}`,
       ...(signerKey ? [`SIGNER_PRIVATE_KEY=${signerKey}`] : []),
     ].join("\n");
     return (
@@ -164,7 +180,7 @@ export default function DeployPage() {
         {/* 2. network */}
         <section>
           <h2 className="label">2. Network</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {NETWORKS.map((n) => (
               <button
                 key={n.chain.id}
@@ -191,7 +207,13 @@ export default function DeployPage() {
           <p className="mb-3 text-sm text-muted">
             A separate wallet the server uses to approve claims. It needs no funds. Generate one here or paste the address of one you made.
           </p>
-          {signerKey ? (
+          {reuseSigner && !signerInput && (
+            <div className="mb-3 rounded-xl border border-line bg-surface p-3 text-sm">
+              Using your current signer <code className="break-all text-xs">{existingSigner}</code> from the {existing!.chain.name} escrow, so the
+              server&apos;s existing <code>SIGNER_PRIVATE_KEY</code> works for this network too. Nothing new to save.
+            </div>
+          )}
+          {reuseSigner && !signerInput ? null : signerKey ? (
             <div className="space-y-3">
               <CopyBox label="Signer address" value={privateKeyToAccount(signerKey).address} />
               <CopyBox label="Signer private key → Vercel SIGNER_PRIVATE_KEY" value={signerKey} secret />

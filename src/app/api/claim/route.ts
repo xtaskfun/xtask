@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAddress, isAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { ESCROW_ADDRESS, ESCROW_CHAIN, escrowAbi } from "@/lib/escrow";
+import { escrowAbi } from "@/lib/escrow";
 import { getSession } from "@/lib/server/session";
 import { getStore } from "@/lib/server/store";
-import { HttpError, keys, loadOpenTask, publicClient, verifyForTask } from "@/lib/server/claim-flow";
+import { HttpError, keys, loadOpenTask, publicClient, resolveTask, verifyForTask } from "@/lib/server/claim-flow";
 import { errorResponse, readTaskId } from "@/lib/server/http";
 import { VERIFICATION_MODE } from "@/lib/site";
 
@@ -21,16 +21,17 @@ const SIGNATURE_TTL_SECONDS = 10 * 60;
 export async function POST(req: Request) {
   try {
     const key = process.env.SIGNER_PRIVATE_KEY;
-    if (!ESCROW_ADDRESS || !key) throw new HttpError(503, "Claims are not configured on this server.");
+    if (!key) throw new HttpError(503, "Claims are not configured on this server.");
 
-    const { taskId, body } = await readTaskId(req);
+    const { taskKey, body } = await readTaskId(req);
+    const { escrow, id: taskId } = resolveTask(taskKey);
     if (typeof body.user !== "string" || !isAddress(body.user)) throw new HttpError(400, "user wallet is required");
     const wallet = getAddress(body.user);
 
-    const { task, meta } = await loadOpenTask(taskId);
+    const { task, meta } = await loadOpenTask(escrow, taskId);
 
-    const already = await publicClient().readContract({
-      address: ESCROW_ADDRESS,
+    const already = await publicClient(escrow.chain).readContract({
+      address: escrow.address,
       abi: escrowAbi,
       functionName: "hasClaimed",
       args: [taskId, wallet],
@@ -45,11 +46,11 @@ export async function POST(req: Request) {
       const session = await getSession();
       if (!session) throw new HttpError(401, "Connect your X account first.");
 
-      const lockKey = keys.claim(taskId, session.id);
+      const lockKey = keys.claim(escrow, taskId, session.id);
       const lockedTo = await store.get(lockKey);
       if (lockedTo && lockedTo !== wallet) throw new HttpError(409, "This X account already claimed this task with another wallet.");
 
-      const result = await verifyForTask(store, session, taskId, meta);
+      const result = await verifyForTask(store, session, escrow, taskId, meta);
       if (!result.ok) throw new HttpError(403, "Not all actions are done yet on X.");
 
       // Bind this X account to this wallet for the task — atomically, so two
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
     const now = Math.floor(Date.now() / 1000);
     const deadline = BigInt(Math.min(now + SIGNATURE_TTL_SECONDS, Number(task.endsAt)));
     const signature = await privateKeyToAccount(key as `0x${string}`).signTypedData({
-      domain: { name: "xtask.fun", version: "1", chainId: ESCROW_CHAIN.id, verifyingContract: ESCROW_ADDRESS },
+      domain: { name: "xtask.fun", version: "1", chainId: escrow.chain.id, verifyingContract: escrow.address },
       types: {
         Claim: [
           { name: "taskId", type: "uint256" },

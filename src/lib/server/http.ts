@@ -20,6 +20,6 @@ export async function readTaskId(req: Request) {
     throw new HttpError(400, "Invalid JSON");
   }
   const { taskId } = body;
-  if (typeof taskId !== "string" || !/^\d{1,18}$/.test(taskId)) throw new HttpError(400, "taskId is required");
-  return { taskId: BigInt(taskId), body };
+  if (typeof taskId !== "string" || !/^(\d{1,10}-)?\d{1,18}$/.test(taskId)) throw new HttpError(400, "taskId is required");
+  return { taskKey: taskId, body };
 }

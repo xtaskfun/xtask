@@ -15,6 +15,9 @@ export type Task = {
   category: Category;
   /** Present only for tasks that live in the escrow contract. */
   onchain?: {
+    chainId: number;
+    escrow: `0x${string}`;
+    taskId: bigint;
     creator: `0x${string}`;
     token: `0x${string}`;
     decimals: number;

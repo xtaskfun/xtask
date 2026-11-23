@@ -1,15 +1,25 @@
 import { zeroAddress, type Address } from "viem";
 import { base, baseSepolia, mainnet, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
+import { robinhood } from "./chains";
 
 export type Token = { symbol: string; address: Address; decimals: number };
 
 const native = (symbol: string): Token => ({ symbol, address: zeroAddress, decimals: 18 });
 
 // Reward tokens creators can fund a task with, per chain.
+// The create page reads symbol() and decimals() from each ERC20 on-chain and hides any
+// token whose on-chain values don't match this list — a guard against a wrong address.
+// To add a token: put its official contract address here (check the issuer's docs).
 export const TOKENS: Record<number, Token[]> = {
   [base.id]: [
     { symbol: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
     { symbol: "USDT", address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6 },
+    native("ETH"),
+  ],
+  [robinhood.id]: [
+    // Paxos Global Dollar. Address from Robinhood Chain listings; the on-chain check above
+    // must still see symbol "USDG" before it can be used.
+    { symbol: "USDG", address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", decimals: 6 },
     native("ETH"),
   ],
   [baseSepolia.id]: [

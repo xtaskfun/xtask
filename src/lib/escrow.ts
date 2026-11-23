@@ -1,17 +1,40 @@
-import { isAddress, type Address } from "viem";
-import { base, baseSepolia } from "wagmi/chains";
+import { isAddress, type Address, type Chain } from "viem";
 import { escrowAbi } from "./escrow-abi";
+import { ESCROW_CHAINS, base, baseSepolia, robinhood } from "./chains";
 
 export { escrowAbi };
 
-const rawAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS;
+export type Escrow = { chain: Chain; address: Address };
 
-/** Escrow contract address, or undefined while not deployed yet (site shows demo data). */
-export const ESCROW_ADDRESS: Address | undefined =
-  rawAddress && isAddress(rawAddress) ? (rawAddress as Address) : undefined;
+const addr = (v: string | undefined) => (v && isAddress(v.trim()) ? (v.trim() as Address) : undefined);
+const chainById = (id: number) => ESCROW_CHAINS.find((c) => c.id === id);
 
-/** Chain the escrow lives on. Defaults to Base Sepolia (testnet). */
-export const ESCROW_CHAIN_ID = Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || baseSepolia.id);
-export const ESCROW_CHAIN = [base, baseSepolia].find((c) => c.id === ESCROW_CHAIN_ID) ?? baseSepolia;
+// NEXT_PUBLIC_* values must be read with static names so Next.js can inline them.
+const configured: [Chain | undefined, Address | undefined][] = [
+  // Original single-chain setting (kept so existing deployments keep working)
+  [chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
+  [base, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE)],
+  [robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)],
+  [baseSepolia, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA)],
+];
+
+/** Every escrow this site uses, one per chain. Empty = demo mode. */
+export const ESCROWS: Escrow[] = configured
+  .filter((e): e is [Chain, Address] => !!e[0] && !!e[1])
+  .filter(([c], i, all) => all.findIndex(([x]) => x.id === c.id) === i)
+  .map(([chain, address]) => ({ chain, address }));
+
+export const HAS_ESCROW = ESCROWS.length > 0;
+export const getEscrow = (chainId: number) => ESCROWS.find((e) => e.chain.id === chainId);
+
+/** Tasks are addressed as "<chainId>-<taskId>". A bare number means the first escrow. */
+export function parseTaskKey(key: string): { escrow: Escrow; id: bigint } | null {
+  const m = /^(?:(\d{1,10})-)?(\d{1,18})$/.exec(key);
+  if (!m) return null;
+  const escrow = m[1] ? getEscrow(Number(m[1])) : ESCROWS[0];
+  return escrow ? { escrow, id: BigInt(m[2]) } : null;
+}
+
+export const taskKey = (chainId: number, id: bigint | string) => `${chainId}-${id}`;
 
 export const SLOTS = 100; // each completer claims 1% of the pool

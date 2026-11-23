@@ -7,6 +7,7 @@ import { ActionPills, Progress } from "@/components/TaskCard";
 import { DemoBanner } from "@/components/TaskGrid";
 import { daysLeft } from "@/lib/tasks";
 import { useTask } from "@/lib/useTasks";
+import { ESCROW_CHAINS, explorerUrl } from "@/lib/chains";
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +51,16 @@ export default function TaskDetailPage() {
           </div>
           <Progress value={task.filled} max={task.slots} />
           <dl className="space-y-2 border-t border-line pt-4 text-sm">
+            {task.onchain && (
+              <div className="flex justify-between">
+                <dt className="text-muted">Network</dt>
+                <dd>
+                  <a className="hover:underline" href={`${explorerUrl(task.onchain.chainId)}/address/${task.onchain.escrow}`} target="_blank" rel="noreferrer noopener">
+                    {ESCROW_CHAINS.find((c) => c.id === task.onchain!.chainId)?.name ?? task.onchain.chainId} ↗
+                  </a>
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between"><dt className="text-muted">Total pool</dt><dd>{pool.toLocaleString()} {task.token}</dd></div>
             <div className="flex justify-between"><dt className="text-muted">Ends in</dt><dd>{ended ? "Ended" : `${daysLeft(task.endsAt)} days`}</dd></div>
             <div className="flex justify-between"><dt className="text-muted">Target</dt><dd><a href={task.targetUrl} target="_blank" rel="noreferrer noopener" className="text-brand hover:underline">Open on X ↗</a></dd></div>

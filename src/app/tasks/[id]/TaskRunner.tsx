@@ -5,7 +5,7 @@ import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWriteC
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { BaseError } from "viem";
 import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
-import { ESCROW_ADDRESS, ESCROW_CHAIN_ID, escrowAbi } from "@/lib/escrow";
+import { escrowAbi } from "@/lib/escrow";
 import { useXSession } from "@/lib/useXSession";
 import { XConnectButton } from "@/components/XConnect";
 import { VERIFICATION_MODE } from "@/lib/site";
@@ -24,7 +24,6 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const { address, isConnected, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
-  const publicClient = usePublicClient({ chainId: ESCROW_CHAIN_ID });
 
   const x = useXSession();
   const [status, setStatus] = useState<Record<string, Status>>({});
@@ -33,12 +32,14 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const [demoClaimed, setDemoClaimed] = useState(false);
 
   const onchain = task.onchain;
+  const taskChainId = onchain?.chainId;
+  const publicClient = usePublicClient({ chainId: taskChainId });
   const claimedQ = useReadContract({
-    address: ESCROW_ADDRESS,
+    address: onchain?.escrow,
     abi: escrowAbi,
     functionName: "hasClaimed",
-    args: [BigInt(task.id), address!],
-    chainId: ESCROW_CHAIN_ID,
+    args: [onchain?.taskId ?? 0n, address!],
+    chainId: taskChainId,
     query: { enabled: !!onchain && !!address },
   });
 
@@ -77,7 +78,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   }
 
   async function ensureChain() {
-    if (chainId !== ESCROW_CHAIN_ID) await switchChainAsync({ chainId: ESCROW_CHAIN_ID });
+    if (taskChainId && chainId !== taskChainId) await switchChainAsync({ chainId: taskChainId });
   }
 
   async function claim() {
@@ -95,11 +96,11 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
 
       await ensureChain();
       const hash = await writeContractAsync({
-        address: ESCROW_ADDRESS!,
+        address: onchain.escrow,
         abi: escrowAbi,
         functionName: "claim",
-        args: [BigInt(task.id), BigInt(data.deadline), data.signature],
-        chainId: ESCROW_CHAIN_ID,
+        args: [onchain.taskId, BigInt(data.deadline), data.signature],
+        chainId: onchain.chainId,
       });
       await publicClient!.waitForTransactionReceipt({ hash });
       await claimedQ.refetch();
@@ -117,11 +118,11 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
     try {
       await ensureChain();
       const hash = await writeContractAsync({
-        address: ESCROW_ADDRESS!,
+        address: onchain!.escrow,
         abi: escrowAbi,
         functionName: "refund",
-        args: [BigInt(task.id)],
-        chainId: ESCROW_CHAIN_ID,
+        args: [onchain!.taskId],
+        chainId: onchain!.chainId,
       });
       await publicClient!.waitForTransactionReceipt({ hash });
       onChange();

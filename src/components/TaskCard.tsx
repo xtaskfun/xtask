@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ACTION_META, Task, daysLeft } from "@/lib/tasks";
+import { ESCROW_CHAINS } from "@/lib/chains";
 
 export function ActionPills({ actions }: { actions: Task["actions"] }) {
   return (
@@ -43,7 +44,14 @@ export default function TaskCard({ task }: { task: Task }) {
           </span>
           {task.creator}
         </div>
-        <span className="rounded-md bg-brand-soft px-2 py-0.5 text-xs text-brand">{task.category}</span>
+        <div className="flex gap-1.5">
+          {task.onchain && (
+            <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-muted">
+              {ESCROW_CHAINS.find((c) => c.id === task.onchain!.chainId)?.name.replace(" Chain", "") ?? ""}
+            </span>
+          )}
+          <span className="rounded-md bg-brand-soft px-2 py-0.5 text-xs text-brand">{task.category}</span>
+        </div>
       </div>
 
       <div>
