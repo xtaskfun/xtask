@@ -15,6 +15,8 @@ const NETWORKS = [
   { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org" },
 ] as const;
 
+const DEPLOY_PAGE_VERSION = "v3 (gas + fee preset)";
+
 // Measured deployment cost is 1,829,885 gas; leave headroom.
 const FALLBACK_DEPLOY_GAS = 2_400_000n;
 
@@ -90,6 +92,13 @@ export default function DeployPage() {
         // RPC hiccup — deployment cost is fixed (~1.83M gas), so the fallback is safe.
       }
 
+      // Also pass the fee, so the wallet has nothing left to estimate.
+      let fees: { maxFeePerGas: bigint; maxPriorityFeePerGas: bigint } | undefined;
+      try {
+        const f = await publicClient.estimateFeesPerGas();
+        fees = { maxFeePerGas: f.maxFeePerGas * 2n, maxPriorityFeePerGas: f.maxPriorityFeePerGas };
+      } catch {}
+
       setStep("sign");
       const hash = await deployContractAsync({
         abi: escrowAbi,
@@ -97,6 +106,7 @@ export default function DeployPage() {
         args,
         chainId: net.chain.id,
         gas,
+        ...fees,
       });
       setStep("mining");
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -207,6 +217,7 @@ export default function DeployPage() {
         <button className="btn-primary w-full py-3" disabled={!ready || !!step} onClick={deploy}>
           {step === "switch" ? `Switching to ${net.label}…` : step === "sign" ? "Confirm in wallet…" : step === "mining" ? "Deploying…" : `Deploy on ${net.label}`}
         </button>
+        <p className="text-center text-[10px] text-muted/60">deploy page {DEPLOY_PAGE_VERSION}</p>
         {net.chain.id === baseSepolia.id && (
           <p className="text-center text-xs text-muted">
             Need test ETH? Use a Base Sepolia faucet (e.g. the Coinbase Developer Platform faucet).
