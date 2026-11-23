@@ -7,10 +7,24 @@ import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://xtask.fun");
+
+const title = "xtask.fun — Engage on X, earn crypto";
+const description = "Complete simple X (Twitter) tasks and earn onchain rewards, or launch a campaign for your project.";
+
 export const metadata: Metadata = {
-  title: "xtask.fun — Engage on X, earn crypto",
-  description: "Complete simple X (Twitter) tasks and earn onchain rewards, or launch a campaign for your project.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  openGraph: { title, description, siteName: "xtask.fun", type: "website" },
+  twitter: { card: "summary_large_image", title, description },
 };
+
+export const viewport = { themeColor: "#000000" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

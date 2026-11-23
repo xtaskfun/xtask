@@ -9,6 +9,23 @@ body {
 }
 
 @layer components {
+  .text-rainbow {
+    @apply bg-rainbow bg-clip-text text-transparent;
+  }
+  /* 1px rainbow border via padding-box / border-box trick */
+  .border-rainbow {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(theme(colors.card), theme(colors.card)) padding-box,
+      theme(backgroundImage.rainbow) border-box;
+  }
+  .btn-rainbow {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#000, #000) padding-box,
+      theme(backgroundImage.rainbow) border-box;
+  }
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40;
   }

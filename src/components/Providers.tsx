@@ -15,7 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <RainbowKitProvider
           locale="en-US"
           modalSize="wide"
-          theme={darkTheme({ accentColor: "#1d9bf0", borderRadius: "large" })}
+          theme={darkTheme({ accentColor: "#ffffff", accentColorForeground: "#000000", borderRadius: "large" })}
           appInfo={{ appName: "xtask.fun", learnMoreUrl: "https://xtask.fun" }}
         >
           {children}

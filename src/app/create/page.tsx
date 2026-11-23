@@ -85,7 +85,7 @@ export default function CreatePage() {
                     type="button"
                     key={a}
                     onClick={() => toggleAction(a)}
-                    className={`rounded-xl border p-3 text-sm transition ${on ? "border-brand bg-brand-soft text-white" : "border-line text-muted hover:text-white"}`}
+                    className={`rounded-xl border p-3 text-sm transition ${on ? "border-rainbow text-white" : "border-line text-muted hover:text-white"}`}
                   >
                     <div className="text-xl">{ACTION_META[a].icon}</div>
                     {ACTION_META[a].label}
@@ -118,7 +118,7 @@ export default function CreatePage() {
             </div>
             <div className="sm:col-span-2">
               <label className="label">Duration: {form.days} days</label>
-              <input type="range" min={1} max={30} value={form.days} onChange={(e) => set("days", Number(e.target.value))} className="w-full accent-[#1d9bf0]" />
+              <input type="range" min={1} max={30} value={form.days} onChange={(e) => set("days", Number(e.target.value))} className="w-full accent-white" />
             </div>
           </div>
 

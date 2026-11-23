@@ -18,7 +18,7 @@ export function Progress({ value, max }: { value: number; max: number }) {
   return (
     <div>
       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-rainbow" style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-1.5 flex justify-between text-xs text-muted">
         <span>{value.toLocaleString()} / {max.toLocaleString()} slots</span>
@@ -33,7 +33,7 @@ export default function TaskCard({ task }: { task: Task }) {
   return (
     <Link
       href={`/tasks/${task.id}`}
-      className="group flex flex-col gap-4 rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5 hover:border-brand/60"
+      className="group flex flex-col gap-4 rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5 hover:border-white/40"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
@@ -46,7 +46,7 @@ export default function TaskCard({ task }: { task: Task }) {
       </div>
 
       <div>
-        <h3 className="font-semibold group-hover:text-brand">{task.title}</h3>
+        <h3 className="font-semibold">{task.title}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-muted">{task.description}</p>
       </div>
 
