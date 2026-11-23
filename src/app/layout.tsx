@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Aurora from "@/components/Aurora";
+import PauseBanner from "@/components/PauseBanner";
 import { SITE_URL, X_HANDLE } from "@/lib/site";
 
 // Self-hosted variable fonts (from npm), so builds never depend on Google Fonts being reachable.
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Aurora />
         <Providers>
+          <PauseBanner />
           <Navbar />
           <main className="mx-auto max-w-6xl px-4">{children}</main>
           <Footer />

@@ -9,7 +9,7 @@ import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { escrowAbi } from "@/lib/escrow";
 import { useXSession } from "@/lib/useXSession";
 import { XConnectButton } from "@/components/XConnect";
-import { SITE_URL, VERIFICATION_MODE, X_HANDLE } from "@/lib/site";
+import { CLAIMS_PAUSED, SITE_URL, VERIFICATION_MODE, X_HANDLE } from "@/lib/site";
 
 const CHECK_ON_X = VERIFICATION_MODE === "x";
 
@@ -246,7 +246,9 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
 
   const claimLabel = claimed
     ? "Reward claimed ✓"
-    : busy === "claim"
+    : CLAIMS_PAUSED
+      ? "Claims paused"
+      : busy === "claim"
       ? "Claiming…"
       : full
         ? "Task is full"
@@ -322,7 +324,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
 
       <button
         className="btn-primary mt-2 w-full py-3"
-        disabled={!allDone || claimed || full || ended || !!busy}
+        disabled={CLAIMS_PAUSED || !allDone || claimed || full || ended || !!busy}
         onClick={claim}
       >
         {claimLabel}

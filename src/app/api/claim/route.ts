@@ -6,7 +6,7 @@ import { getSession } from "@/lib/server/session";
 import { getStore } from "@/lib/server/store";
 import { HttpError, keys, loadOpenTask, publicClient, resolveTask, verifyForTask } from "@/lib/server/claim-flow";
 import { errorResponse, readTaskId } from "@/lib/server/http";
-import { VERIFICATION_MODE } from "@/lib/site";
+import { CLAIMS_PAUSED, VERIFICATION_MODE } from "@/lib/site";
 import { claimLimitPerIp, clientIp, hashIp, reserveIpSlot } from "@/lib/server/ip-limit";
 
 export const runtime = "nodejs";
@@ -22,6 +22,7 @@ const SIGNATURE_TTL_SECONDS = 10 * 60;
  */
 export async function POST(req: Request) {
   try {
+    if (CLAIMS_PAUSED) throw new HttpError(503, "Claims are paused for maintenance. Please check back soon.");
     const key = process.env.SIGNER_PRIVATE_KEY;
     if (!key) throw new HttpError(503, "Claims are not configured on this server.");
 

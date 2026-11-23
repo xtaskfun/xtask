@@ -13,7 +13,7 @@ import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
 import { DEFAULT_FEE_BPS, quote, rewardForBudget } from "@/lib/fees";
-import { TASK_DURATION_DAYS } from "@/lib/site";
+import { CLAIMS_PAUSED, TASK_DURATION_DAYS } from "@/lib/site";
 
 const MAX_META_BYTES = 1024;
 
@@ -312,7 +312,7 @@ export default function CreatePage() {
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           {isConnected ? (
-            <button type="submit" className="btn-primary w-full py-3" disabled={!valid || busy || step === "done"}>
+            <button type="submit" className="btn-primary w-full py-3" disabled={CLAIMS_PAUSED || !valid || busy || step === "done"}>
               {buttonLabel}
             </button>
           ) : (
@@ -321,6 +321,7 @@ export default function CreatePage() {
               <ConnectWallet />
             </div>
           )}
+          {CLAIMS_PAUSED && <p className="text-center text-sm text-yellow-300">Creating tasks is paused for maintenance. Please check back soon.</p>}
           {!escrow && <p className="text-center text-xs text-muted">Demo mode — the escrow contract isn&apos;t connected yet, nothing will be charged.</p>}
         </form>
 

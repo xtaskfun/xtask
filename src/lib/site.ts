@@ -40,3 +40,14 @@ export const TASK_DURATION_DAYS = 3;
 
 /** Public source code. */
 export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
+
+/**
+ * Emergency switch. While paused, the server gives out no claim signatures (so nobody — bots
+ * included — can claim), and creating tasks is disabled in the UI. Refunds keep working.
+ * NEXT_PUBLIC_CLAIMS_PAUSED="false" / "true" in Vercel overrides the default below.
+ */
+const PAUSED_BY_DEFAULT = true;
+export const CLAIMS_PAUSED =
+  process.env.NEXT_PUBLIC_CLAIMS_PAUSED === undefined || process.env.NEXT_PUBLIC_CLAIMS_PAUSED === ""
+    ? PAUSED_BY_DEFAULT
+    : process.env.NEXT_PUBLIC_CLAIMS_PAUSED === "true";
