@@ -6,7 +6,7 @@ xtask.fun is a social task platform. Projects fund a campaign that asks people t
 like, repost, reply to or quote on X. Each person who completes the task claims
 **1% of the reward pool** straight from a smart contract.
 
-- Website: https://xtask-zeta.vercel.app
+- Website: https://xtask.fun
 - X: [@Xtaskfun](https://x.com/Xtaskfun)
 
 ## Features

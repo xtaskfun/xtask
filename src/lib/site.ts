@@ -1,3 +1,6 @@
+/** Public site address (link previews, docs). NEXT_PUBLIC_SITE_URL overrides it. */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://xtask.fun").replace(/\/$/, "");
+
 /** Official xtask.fun accounts. */
 export const X_HANDLE = "Xtaskfun";
 export const X_URL = `https://x.com/${X_HANDLE}`;

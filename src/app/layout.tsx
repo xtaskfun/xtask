@@ -4,15 +4,11 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { X_HANDLE } from "@/lib/site";
+import { SITE_URL, X_HANDLE } from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "https://xtask.fun");
+const siteUrl = SITE_URL;
 
 const title = "xtask.fun — Engage on X, earn crypto";
 const description = "Complete simple X (Twitter) tasks and earn onchain rewards, or launch a campaign for your project.";
