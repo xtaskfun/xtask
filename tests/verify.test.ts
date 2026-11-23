@@ -83,8 +83,13 @@ describe("accountEligibility", () => {
   afterEach(() => vi.unstubAllEnvs());
   const now = new Date("2026-11-23").getTime();
 
-  it("applies default minimum age (30d) and followers (50)", () => {
+  it("by default requires a 30-day-old account and no minimum followers", () => {
     expect(accountEligibility({ createdAt: "2026-11-10", followers: 500 }, now).ok).toBe(false);
+    expect(accountEligibility({ createdAt: "2025-01-01", followers: 0 }, now).ok).toBe(true);
+  });
+
+  it("can require followers via env", () => {
+    vi.stubEnv("X_MIN_FOLLOWERS", "50");
     expect(accountEligibility({ createdAt: "2025-01-01", followers: 49 }, now).ok).toBe(false);
     expect(accountEligibility({ createdAt: "2025-01-01", followers: 50 }, now).ok).toBe(true);
   });

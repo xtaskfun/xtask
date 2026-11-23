@@ -55,7 +55,7 @@ User login dengan akun X (OAuth 2.0). Saat klik **verify** / **Claim**, server m
 
 Aturan anti-curang:
 - 1 akun X hanya bisa claim **sekali per task** (disimpan di Redis), 1 wallet juga sekali (di contract)
-- akun X minimal 30 hari & 50 follower (atur di `X_MIN_ACCOUNT_AGE_DAYS`, `X_MIN_FOLLOWERS`)
+- akun X minimal 30 hari (atur di `X_MIN_ACCOUNT_AGE_DAYS`); minimal follower bisa diatur di `X_MIN_FOLLOWERS` (default 0)
 
 ### Setup
 1. **X Developer:** buka developer.x.com → buat Project + App → *User authentication settings*:
