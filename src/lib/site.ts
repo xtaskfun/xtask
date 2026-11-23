@@ -46,7 +46,7 @@ export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
  * included — can claim), and creating tasks is disabled in the UI. Refunds keep working.
  * NEXT_PUBLIC_CLAIMS_PAUSED="false" / "true" in Vercel overrides the default below.
  */
-const PAUSED_BY_DEFAULT = true;
+const PAUSED_BY_DEFAULT = false;
 export const CLAIMS_PAUSED =
   process.env.NEXT_PUBLIC_CLAIMS_PAUSED === undefined || process.env.NEXT_PUBLIC_CLAIMS_PAUSED === ""
     ? PAUSED_BY_DEFAULT
