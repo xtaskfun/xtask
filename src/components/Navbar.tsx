@@ -23,7 +23,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/50 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <div className="flex items-center gap-8 min-w-0">
             <Logo />
@@ -34,7 +34,7 @@ export default function Navbar() {
                   href={n.href}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                     isActive(path, n.href)
-                      ? "bg-white/10 text-white"
+                      ? "bg-white/10 text-white shadow-[inset_0_-2px_0_0] shadow-white/40"
                       : "text-muted hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -48,19 +48,20 @@ export default function Navbar() {
           <ConnectWallet />
           </div>
         </div>
+        <div className="h-px bg-rainbow opacity-30" />
       </header>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-bg/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-black/70 backdrop-blur-xl md:hidden">
         {NAV.map((n) => (
           <Link
             key={n.href}
             href={n.href}
             className={`flex flex-col items-center gap-0.5 py-2.5 text-xs ${
-              isActive(path, n.href) ? "text-white" : "text-muted"
+              isActive(path, n.href) ? "text-white [&>span]:scale-110" : "text-muted"
             }`}
           >
-            <span className="text-lg">{n.icon}</span>
+            <span className="text-lg transition">{n.icon}</span>
             {n.label}
           </Link>
         ))}

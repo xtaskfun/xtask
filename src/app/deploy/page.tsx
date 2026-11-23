@@ -28,7 +28,7 @@ function CopyBox({ label, value, secret }: { label: string; value: string; secre
   return (
     <div>
       <div className="mb-1 text-xs text-muted">{label}</div>
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
+      <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
         <code className="min-w-0 flex-1 break-all text-xs">{show ? value : "•".repeat(40)}</code>
         {secret && (
           <button type="button" className="text-xs text-muted hover:text-white" onClick={() => setShow((s) => !s)}>
@@ -150,7 +150,7 @@ export default function DeployPage() {
             {deployed.address} ↗
           </a>
         </p>
-        <div className="mt-6 space-y-4 rounded-2xl border border-line bg-card p-6">
+        <div className="mt-6 space-y-4 glass p-6">
           <p className="text-sm">
             Add these in <b>Vercel → Settings → Environment Variables</b>, then redeploy the site:
           </p>
@@ -170,7 +170,7 @@ export default function DeployPage() {
       <h1 className="text-3xl font-bold">Deploy escrow contract</h1>
       <p className="mt-2 text-muted">Deploys XTaskEscrow from your wallet. You become the owner (you can change the signer later).</p>
 
-      <div className="mt-8 space-y-6 rounded-2xl border border-line bg-card p-6">
+      <div className="mt-8 space-y-6 glass p-6">
         {/* 1. wallet */}
         <section>
           <h2 className="label">1. Owner wallet</h2>
@@ -208,7 +208,7 @@ export default function DeployPage() {
             A separate wallet the server uses to approve claims. It needs no funds. Generate one here or paste the address of one you made.
           </p>
           {reuseSigner && !signerInput && (
-            <div className="mb-3 rounded-xl border border-line bg-surface p-3 text-sm">
+            <div className="mb-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-sm">
               Using your current signer <code className="break-all text-xs">{existingSigner}</code> from the {existing!.chain.name} escrow, so the
               server&apos;s existing <code>SIGNER_PRIVATE_KEY</code> works for this network too. Nothing new to save.
             </div>

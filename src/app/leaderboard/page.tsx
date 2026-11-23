@@ -25,7 +25,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="py-10">
-      <h1 className="text-3xl font-bold">Leaderboard</h1>
+      <h1 className="text-4xl font-bold md:text-5xl">🏆 <span className="text-rainbow-flow">Leaderboard</span></h1>
       <p className="mt-1 text-muted">
         Top task creators. Earn <span className="text-rainbow font-semibold">{POINTS_PER_USD} points for every $1</span> you spend on tasks.
       </p>
@@ -43,7 +43,7 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card">
+      <div className="mt-6 overflow-hidden glass">
         <div className="grid grid-cols-[48px_1fr_auto] gap-3 border-b border-line px-4 py-3 text-xs uppercase tracking-wide text-muted sm:grid-cols-[56px_1fr_90px_110px_110px]">
           <span>#</span>
           <span>Creator</span>

@@ -31,7 +31,7 @@ export default function TaskDetailPage() {
       {isDemo && <DemoBanner />}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-2xl border border-line bg-card p-6">
+        <div className="glass p-6">
           <div className="flex items-center gap-2 text-sm text-muted">
             <span className="rounded-md bg-brand-soft px-2 py-0.5 text-xs text-brand">{task.category}</span>
             by {task.creator}
@@ -44,7 +44,7 @@ export default function TaskDetailPage() {
           <TaskRunner task={task} isDemo={isDemo} onChange={() => refetch()} />
         </div>
 
-        <aside className="h-fit space-y-4 rounded-2xl border border-line bg-card p-6">
+        <aside className="h-fit space-y-4 glass p-6">
           <div>
             <div className="text-sm text-muted">Your reward</div>
             <div className="text-rainbow text-3xl font-black">{task.rewardPerUser.toLocaleString()} {task.token}</div>

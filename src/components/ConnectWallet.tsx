@@ -45,7 +45,7 @@ export default function ConnectWallet({ full = false }: { full?: boolean }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-60 rounded-xl border border-line bg-card p-1 text-sm shadow-xl">
+        <div className="absolute right-0 top-12 z-50 w-60 rounded-xl border border-white/10 bg-[#0c0c0c]/95 backdrop-blur-xl p-1 text-sm shadow-xl">
           <div className="px-3 pb-1 pt-2 text-xs uppercase tracking-wide text-muted">Network</div>
           {ESCROW_CHAINS.map((c) => (
             <button

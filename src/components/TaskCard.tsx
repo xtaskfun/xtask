@@ -7,7 +7,7 @@ export function ActionPills({ actions }: { actions: Task["actions"] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {actions.map((a) => (
-        <span key={a} className="rounded-full border border-line bg-white/5 px-2.5 py-1 text-xs">
+        <span key={a} className="rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs">
           {ACTION_META[a].icon} {ACTION_META[a].label}
         </span>
       ))}
@@ -20,7 +20,7 @@ export function Progress({ value, max }: { value: number; max: number }) {
   return (
     <div>
       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full bg-rainbow" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-rainbow-loop bg-[length:200%_100%] animate-shimmer transition-[width] duration-700" style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-1.5 flex justify-between text-xs text-muted">
         <span>{value.toLocaleString()} / {max.toLocaleString()} slots</span>
@@ -36,7 +36,7 @@ export default function TaskCard({ task }: { task: Task }) {
   return (
     <Link
       href={`/tasks/${task.id}`}
-      className="group flex flex-col gap-4 rounded-2xl border border-line bg-card p-5 transition hover:-translate-y-0.5 hover:border-white/40"
+      className="glow-card group flex flex-col gap-4 p-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
@@ -60,7 +60,7 @@ export default function TaskCard({ task }: { task: Task }) {
       </div>
 
       <div>
-        <h3 className="font-semibold">{task.title}</h3>
+        <h3 className="text-lg font-bold leading-snug">{task.title}</h3>
         {task.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{task.description}</p>}
       </div>
 
@@ -68,16 +68,20 @@ export default function TaskCard({ task }: { task: Task }) {
 
       <Progress value={task.filled} max={task.slots} />
 
-      <div className="mt-auto flex items-center justify-between border-t border-line pt-4">
+      <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-4">
         <div>
           <div className="text-xs text-muted">Reward</div>
-          <div className="font-bold text-accent">
-            {task.rewardPerUser} {task.token}
+          <div className="font-display text-xl font-bold text-accent">
+            {task.rewardPerUser.toLocaleString("en-US", { maximumFractionDigits: 6 })} {task.token}
           </div>
         </div>
-        <span className={`text-xs ${full || ended ? "text-red-400" : "text-muted"}`}>
-          {full ? "Full" : ended ? "Ended" : `${daysLeft(task.endsAt)}d left`}
-        </span>
+        {full || ended ? (
+          <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs text-red-400">{full ? "Full" : "Ended"}</span>
+        ) : (
+          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black transition group-hover:scale-105">
+            Earn → <span className="font-normal text-black/50">{daysLeft(task.endsAt)}d</span>
+          </span>
+        )}
       </div>
     </Link>
   );

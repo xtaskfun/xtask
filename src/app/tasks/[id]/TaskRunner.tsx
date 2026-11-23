@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAccount, usePublicClient, useReadContract, useSwitchChain, useWriteContract } from "wagmi";
 import ConnectWallet from "@/components/ConnectWallet";
+import { confetti } from "@/lib/confetti";
 import { BaseError } from "viem";
 import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { escrowAbi } from "@/lib/escrow";
@@ -126,7 +127,11 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   }
 
   async function claim() {
-    if (!onchain) return setDemoClaimed(true);
+    if (!onchain) {
+      setDemoClaimed(true);
+      confetti();
+      return;
+    }
     setError("");
     setBusy("claim");
     try {
@@ -148,6 +153,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
       });
       await publicClient!.waitForTransactionReceipt({ hash });
       await claimedQ.refetch();
+      confetti();
       onChange();
     } catch (e) {
       setError(errMsg(e));
@@ -189,7 +195,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   if (isCreator) {
     const unclaimed = task.rewardPerUser * (task.slots - task.filled);
     return (
-      <div className="mt-4 space-y-3 rounded-xl border border-line bg-surface p-5 text-sm">
+      <div className="mt-4 space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 text-sm">
         <p>You created this task. {task.filled} of {task.slots} slots claimed.</p>
         {onchain!.refunded ? (
           <p className="text-muted">Unclaimed rewards were refunded to you.</p>
@@ -242,7 +248,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
       {task.actions.map((a, i) => {
         const st: Status = claimed ? "done" : (status[a] ?? "todo");
         return (
-          <div key={a} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
+          <div key={a} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
             <div className="flex items-center gap-3">
               <span
                 className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm ${

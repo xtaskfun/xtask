@@ -62,7 +62,7 @@ export function XConnectButton({ full = false }: { full?: boolean }) {
         <span className="hidden max-w-28 truncate sm:inline">@{user.username}</span>
       </button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-48 rounded-xl border border-line bg-card p-1 text-sm shadow-xl">
+        <div className="absolute right-0 top-12 z-50 w-48 rounded-xl border border-white/10 bg-[#0c0c0c]/95 backdrop-blur-xl p-1 text-sm shadow-xl">
           <div className="truncate px-3 py-2 text-muted">{user.name}</div>
           <button
             onClick={async () => {

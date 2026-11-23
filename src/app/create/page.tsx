@@ -208,13 +208,13 @@ export default function CreatePage() {
 
   return (
     <div className="py-10">
-      <h1 className="text-3xl font-bold">Create a task</h1>
+      <h1 className="text-4xl font-bold md:text-5xl">Create a <span className="text-rainbow-flow">task</span></h1>
       <p className="mt-1 text-muted">
         Set your total budget and how many people can claim. The {(feeBps ?? DEFAULT_FEE_BPS) / 100}% platform fee is taken from the budget — no extra cost.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <form className="space-y-6 rounded-2xl border border-line bg-card p-6" onSubmit={submit}>
+        <form className="space-y-6 glass p-6" onSubmit={submit}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Your X handle</label>
@@ -297,7 +297,7 @@ export default function CreatePage() {
             </div>
           </div>
 
-          <div className="space-y-2 rounded-xl bg-surface p-4 text-sm">
+          <div className="space-y-2 rounded-xl border border-white/[0.06] bg-black/30 p-4 text-sm">
             <div className="flex justify-between"><span className="text-muted">Total budget</span><span>{fmt(amount)} {tokenSymbol}</span></div>
             <div className="flex justify-between"><span className="text-muted">Platform fee ({feeBps === undefined ? "…" : feeBps / 100}%)</span><span>− {fmt(fee)} {tokenSymbol}</span></div>
             <div className="flex justify-between"><span className="text-muted">Reward pool</span><span>{fmt(pool)} {tokenSymbol}</span></div>
