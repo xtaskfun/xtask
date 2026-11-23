@@ -6,6 +6,7 @@ import { getSession } from "@/lib/server/session";
 import { getStore } from "@/lib/server/store";
 import { HttpError, keys, loadOpenTask, publicClient, verifyForTask } from "@/lib/server/claim-flow";
 import { errorResponse, readTaskId } from "@/lib/server/http";
+import { VERIFICATION_MODE } from "@/lib/site";
 
 export const runtime = "nodejs";
 
@@ -13,8 +14,9 @@ const SIGNATURE_TTL_SECONDS = 10 * 60;
 
 /**
  * Returns a signature that lets `user` claim 1% of the task pool from the escrow.
- * Requirements: logged-in X account, all actions verified on X, and this X account
- * has not claimed the task with a different wallet.
+ * With NEXT_PUBLIC_VERIFICATION_MODE=x it also requires a logged-in X account, all
+ * actions verified on X, and that this X account hasn't claimed with another wallet.
+ * Otherwise there is no check beyond the contract's one-claim-per-wallet rule.
  */
 export async function POST(req: Request) {
   try {
@@ -24,9 +26,6 @@ export async function POST(req: Request) {
     const { taskId, body } = await readTaskId(req);
     if (typeof body.user !== "string" || !isAddress(body.user)) throw new HttpError(400, "user wallet is required");
     const wallet = getAddress(body.user);
-
-    const store = getStore();
-    if (!store) throw new HttpError(503, "Database is not configured.");
 
     const { task, meta } = await loadOpenTask(taskId);
 
@@ -38,9 +37,11 @@ export async function POST(req: Request) {
     });
     if (already) throw new HttpError(409, "Already claimed");
 
-    // Testnet-only escape hatch for trying the flow without X API access.
-    const skipX = process.env.CLAIM_VERIFICATION === "off";
+    // In "none" mode there is no check: the contract still allows one claim per wallet.
+    const skipX = VERIFICATION_MODE !== "x" || process.env.CLAIM_VERIFICATION === "off";
     if (!skipX) {
+      const store = getStore();
+      if (!store) throw new HttpError(503, "Database is not configured.");
       const session = await getSession();
       if (!session) throw new HttpError(401, "Connect your X account first.");
 

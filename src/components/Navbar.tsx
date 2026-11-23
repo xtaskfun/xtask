@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Logo from "./Logo";
 import XConnect from "./XConnect";
+import { VERIFICATION_MODE } from "@/lib/site";
 
 export const NAV = [
   { href: "/", label: "Home", icon: "🏠" },
@@ -42,7 +43,7 @@ export default function Navbar() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
-          <XConnect />
+          {VERIFICATION_MODE === "x" && <XConnect />}
           <ConnectButton
             label="Connect Wallet"
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}

@@ -44,7 +44,18 @@ Dana task disimpan di smart contract `contracts/contracts/XTaskEscrow.sol`:
 Cara deploy & env lengkap: lihat [`contracts/README.md`](contracts/README.md).
 Selama `NEXT_PUBLIC_ESCROW_ADDRESS` belum diisi, situs memakai data demo.
 
-## Login X & verifikasi
+## Mode verifikasi
+Diatur lewat env `NEXT_PUBLIC_VERIFICATION_MODE`:
+
+| Nilai | Alur |
+|---|---|
+| *(kosong)* / `none` — **default** | Connect wallet → buka tiap langkah lewat tombol **Go** → **Claim**. **Tidak ada pengecekan**: siapa pun bisa claim 1x per wallet. |
+| `x` | Wajib login X, aksi dicek lewat X API (butuh app X Developer, lihat di bawah). |
+
+⚠️ Mode `none` tidak bisa membedakan orang yang benar-benar mengerjakan task. Bot dengan
+banyak wallet bisa menghabiskan pool. Kontrak tetap membatasi 1 claim per wallet & 100 slot.
+
+## Login X & verifikasi (mode `x`)
 User login dengan akun X (OAuth 2.0). Saat klik **verify** / **Claim**, server mengecek lewat X API:
 
 | Aksi | Dicek dari |

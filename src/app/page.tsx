@@ -1,6 +1,6 @@
 import Link from "next/link";
 import TrendingTasks from "@/components/TaskGrid";
-import { X_HANDLE, X_URL } from "@/lib/site";
+import { VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
 const STATS = [
   { label: "Rewards paid", value: "$248K" },
@@ -11,7 +11,9 @@ const STATS = [
 
 const STEPS = [
   { n: "01", title: "Connect wallet", text: "Pick from MetaMask, OKX, Trust, Phantom, Coinbase and more." },
-  { n: "02", title: "Link your X", text: "Connect your X account so we can verify your engagement." },
+  VERIFICATION_MODE === "x"
+    ? { n: "02", title: "Link your X", text: "Connect your X account so we can verify your engagement." }
+    : { n: "02", title: "Pick a task", text: "Browse open campaigns and choose the rewards you like." },
   { n: "03", title: "Do tasks", text: "Follow, like, repost, reply or quote — each task takes seconds." },
   { n: "04", title: "Claim", text: "Hit Claim and 1% of the task pool lands straight in your wallet." },
 ];

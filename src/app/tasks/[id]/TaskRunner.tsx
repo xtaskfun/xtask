@@ -8,6 +8,9 @@ import { ACTION_META, Task, TaskAction } from "@/lib/tasks";
 import { ESCROW_ADDRESS, ESCROW_CHAIN_ID, escrowAbi } from "@/lib/escrow";
 import { useXSession } from "@/lib/useXSession";
 import { XConnectButton } from "@/components/XConnect";
+import { VERIFICATION_MODE } from "@/lib/site";
+
+const CHECK_ON_X = VERIFICATION_MODE === "x";
 
 type Status = "todo" | "done" | "missing";
 
@@ -157,7 +160,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
     );
   }
 
-  const needX = !!onchain && !claimed && !x.user;
+  const needX = CHECK_ON_X && !!onchain && !claimed && !x.user;
 
   const claimLabel = claimed
     ? "🎉 Reward claimed"
@@ -199,12 +202,25 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
                 <div className="text-xs text-muted">{st === "missing" ? "Not found on X yet" : task.creator}</div>
               </div>
             </div>
-            <a href={task.targetUrl} target="_blank" rel="noreferrer noopener" className="btn-ghost px-4 py-2">Go</a>
+            <a
+              href={task.targetUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="btn-ghost px-4 py-2"
+              // Without X verification, opening each step on X is what unlocks Claim.
+              onClick={() => !CHECK_ON_X && setStatus((s) => ({ ...s, [a]: "done" }))}
+            >
+              {st === "done" && !CHECK_ON_X ? "Opened" : "Go"}
+            </a>
           </div>
         );
       })}
 
-      {!allDone && !claimed && (
+      {!CHECK_ON_X && !allDone && !claimed && (
+        <p className="text-center text-xs text-muted">Open every step on X and complete it — then claim your reward.</p>
+      )}
+
+      {CHECK_ON_X && !allDone && !claimed && (
         <button
           className="btn-rainbow mt-2 w-full py-3"
           disabled={!!busy || needX || ended || full}
