@@ -57,7 +57,7 @@ export default function HomePage() {
       <section className="mt-24">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <span className="eyebrow">🔥 Hot right now</span>
+            <span className="eyebrow">Hot right now</span>
             <h2 className="mt-3 text-3xl font-bold md:text-4xl">Trending tasks</h2>
           </div>
           <Link href="/tasks" className="btn-ghost shrink-0">
