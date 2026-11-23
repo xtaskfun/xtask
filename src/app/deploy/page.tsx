@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useDeployContract, usePublicClient, useSwitchChain } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
-import { getAddress, isAddress, type Address, type Hex } from "viem";
+import { encodeDeployData, getAddress, isAddress, type Address, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { escrowAbi } from "@/lib/escrow-abi";
 import { escrowBytecode } from "@/lib/escrow-bytecode";
@@ -14,6 +14,9 @@ const NETWORKS = [
   { chain: baseSepolia, label: "Base Sepolia", note: "Testnet — free test ETH, recommended first", explorer: "https://sepolia.basescan.org" },
   { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org" },
 ] as const;
+
+// Measured deployment cost is 1,829,885 gas; leave headroom.
+const FALLBACK_DEPLOY_GAS = 2_400_000n;
 
 function CopyBox({ label, value, secret }: { label: string; value: string; secret?: boolean }) {
   const [copied, setCopied] = useState(false);
@@ -73,12 +76,27 @@ export default function DeployPage() {
         setStep("switch");
         await switchChainAsync({ chainId: net.chain.id });
       }
+      // Estimate gas ourselves and pass it in: some wallets (e.g. OKX) fail to estimate
+      // contract deployments and then refuse to confirm.
+      const args = [address, signerAddress] as const;
+      let gas = FALLBACK_DEPLOY_GAS;
+      try {
+        const est = await publicClient.estimateGas({
+          account: address,
+          data: encodeDeployData({ abi: escrowAbi, bytecode: escrowBytecode, args }),
+        });
+        gas = (est * 12n) / 10n; // +20% headroom
+      } catch {
+        // RPC hiccup — deployment cost is fixed (~1.83M gas), so the fallback is safe.
+      }
+
       setStep("sign");
       const hash = await deployContractAsync({
         abi: escrowAbi,
         bytecode: escrowBytecode,
-        args: [address, signerAddress],
+        args,
         chainId: net.chain.id,
+        gas,
       });
       setStep("mining");
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
