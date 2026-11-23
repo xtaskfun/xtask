@@ -3,6 +3,8 @@ import { privateKeyToAccount } from "viem/accounts";
 import { ESCROWS, escrowAbi } from "@/lib/escrow";
 import { publicClient } from "@/lib/server/claim-flow";
 import { VERIFICATION_MODE } from "@/lib/site";
+import { keeperAccount } from "@/lib/server/keeper";
+import { formatEther } from "viem";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,8 +25,20 @@ export async function GET() {
   const escrows = await Promise.all(
     ESCROWS.map(async (e) => {
       try {
-        const onchainSigner = await publicClient(e.chain).readContract({ address: e.address, abi: escrowAbi, functionName: "signer" });
-        return { chain: e.chain.name, chainId: e.chain.id, address: e.address, onchainSigner, signerMatches: onchainSigner === serverSigner };
+        const client = publicClient(e.chain);
+        const onchainSigner = await client.readContract({ address: e.address, abi: escrowAbi, functionName: "signer" });
+        // The refund keeper pays gas in ETH on each network
+        const keeper = keeperAccount();
+        const keeperEth = keeper ? Number(formatEther(await client.getBalance({ address: keeper.address }))) : null;
+        return {
+          chain: e.chain.name,
+          chainId: e.chain.id,
+          address: e.address,
+          onchainSigner,
+          signerMatches: onchainSigner === serverSigner,
+          keeperEth,
+          keeperNeedsGas: keeperEth !== null && keeperEth < 0.0002,
+        };
       } catch {
         return { chain: e.chain.name, chainId: e.chain.id, address: e.address, error: "could not read the escrow on this chain" };
       }
@@ -32,5 +46,5 @@ export async function GET() {
   );
 
   const ok = !!serverSigner && escrows.length > 0 && escrows.every((e) => "signerMatches" in e && e.signerMatches);
-  return NextResponse.json({ ok, verificationMode: VERIFICATION_MODE, serverSigner, escrows });
+  return NextResponse.json({ ok, verificationMode: VERIFICATION_MODE, serverSigner, keeper: keeperAccount()?.address ?? null, escrows });
 }

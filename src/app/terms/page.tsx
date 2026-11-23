@@ -87,8 +87,9 @@ export default function TermsPage() {
                 the platform at creation and is <strong>non-refundable</strong>. The rest is the reward pool.
               </li>
               <li>
-                Each task runs for <strong>{TASK_DURATION_DAYS} days</strong>. The reward pool can&apos;t be withdrawn early. After the task ends
-                you can refund rewards nobody claimed.
+                Each task runs for <strong>{TASK_DURATION_DAYS} days</strong>. The reward pool can&apos;t be withdrawn early. When the task ends,
+                rewards nobody claimed are refunded to your wallet automatically (anyone, including an automated service, can trigger
+                the refund, but the funds always go to you).
               </li>
               <li>
                 Rewards are paid to anyone the Site allows to claim. Completion of actions on X may not be verified automatically, and we do not

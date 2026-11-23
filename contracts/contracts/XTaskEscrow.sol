@@ -71,7 +71,6 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
     error AlreadyClaimed();
     error SignatureExpired();
     error InvalidSignature();
-    error NotCreator();
     error NotEnded();
     error AlreadyRefunded();
     error ZeroAddress();
@@ -162,11 +161,11 @@ contract XTaskEscrow is EIP712, Ownable, ReentrancyGuard {
 
     // ---------------------------------------------------------------- refund
 
-    /// @notice After the task ends, the creator gets back the unclaimed slots.
+    /// @notice After the task ends, the unclaimed slots go back to the creator.
+    /// @dev Anyone may call this (e.g. an automated keeper) — funds always go to the creator.
     function refund(uint256 taskId) external nonReentrant {
         Task storage t = _tasks[taskId];
         if (t.creator == address(0)) revert UnknownTask();
-        if (msg.sender != t.creator) revert NotCreator();
         if (block.timestamp <= t.endsAt) revert NotEnded();
         if (t.refunded) revert AlreadyRefunded();
 

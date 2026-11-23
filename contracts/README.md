@@ -14,7 +14,8 @@
    that signature to `claim()` and receives the reward straight from the contract.
    - one claim per wallet per task, no more claims than people set, signatures expire after 10 min
    - a signature only works for the wallet it was made for
-3. **Refund:** after the task ends, the creator can call `refund()` to get the unclaimed slots back.
+3. **Refund:** after the task ends, anyone can call `refund()` and the unclaimed slots go back to
+   the creator (the web app does this automatically).
 
 The contract owner can change the signer and the fee via `setFee(recipient, bps)` (max 10%,
 applies to new tasks only). It **cannot** withdraw anyone's pool.

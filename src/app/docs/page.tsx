@@ -148,8 +148,8 @@ export default function DocsPage() {
                 platform when the task is created and is not refunded.
               </li>
               <li>
-                Every task runs for <strong>{TASK_DURATION_DAYS} days</strong>. After that, the creator can open the task and tap{" "}
-                <em>Refund</em> to get back the rewards nobody claimed.
+                Every task runs for <strong>{TASK_DURATION_DAYS} days</strong>. When it ends, the rewards nobody claimed are{" "}
+                <strong>refunded to the creator automatically</strong> — no action needed.
               </li>
               <li>Rewards can&apos;t be withdrawn early, so people doing your task can always be paid.</li>
               <li>People claiming pay their own network fee (gas). There is no fee for claiming on xtask.fun.</li>
@@ -260,7 +260,7 @@ export default function DocsPage() {
               <h3>Can I claim the same task twice?</h3>
               <p>No — one claim per wallet per task.</p>
               <h3>I created a task by mistake. Can I cancel it?</h3>
-              <p>Not before it ends. After {TASK_DURATION_DAYS} days you can refund every unclaimed reward. The platform fee is not refunded.</p>
+              <p>Not before it ends. After {TASK_DURATION_DAYS} days every unclaimed reward is refunded to your wallet automatically. The platform fee is not refunded.</p>
               <h3>Where can I get help?</h3>
               <p>
                 Send a DM to{" "}

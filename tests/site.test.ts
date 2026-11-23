@@ -13,13 +13,16 @@ describe("SITE_URL (used in share links)", () => {
   it("uses another custom domain", async () => expect(await siteUrl("https://app.xtask.fun/")).toBe("https://app.xtask.fun"));
 });
 
-describe("isHiddenTask (reset point)", () => {
-  it("hides Robinhood test tasks #1-#2 only", async () => {
+describe("isHiddenTask (reset point per contract)", () => {
+  it("hides test tasks #1-#2 only on the old Robinhood escrow", async () => {
     vi.resetModules();
     const { isHiddenTask } = await import("@/lib/site");
-    expect(isHiddenTask(4663, 1n)).toBe(true);
-    expect(isHiddenTask(4663, 2n)).toBe(true);
-    expect(isHiddenTask(4663, 3n)).toBe(false);
-    expect(isHiddenTask(8453, 1n)).toBe(false);
+    const OLD = "0x3ae9e77B5c880E12F545a20825d24bcFaF1b7fAD";
+    const NEW = "0x1111111111111111111111111111111111111111";
+    expect(isHiddenTask(4663, 1n, OLD)).toBe(true);
+    expect(isHiddenTask(4663, 2n, OLD)).toBe(true);
+    expect(isHiddenTask(4663, 3n, OLD)).toBe(false);
+    expect(isHiddenTask(4663, 1n, NEW)).toBe(false); // a new contract starts clean
+    expect(isHiddenTask(8453, 1n, NEW)).toBe(false);
   });
 });

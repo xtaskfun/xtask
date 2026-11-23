@@ -111,11 +111,6 @@ export const escrowAbi = [
   },
   {
     "inputs": [],
-    "name": "NotCreator",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotEnded",
     "type": "error"
   },

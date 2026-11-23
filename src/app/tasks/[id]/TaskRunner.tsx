@@ -94,6 +94,21 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const isCreator = !!onchain && !!address && onchain.creator.toLowerCase() === address.toLowerCase();
   const allDone = task.actions.every((a) => status[a] === "done");
 
+  // When an ended task still holds unclaimed rewards, ask the server to refund them to the
+  // creator right away (the daily job does the same for tasks nobody opens).
+  const [autoRefund, setAutoRefund] = useState<"idle" | "running" | "done" | "failed">("idle");
+  const needsRefund = !!onchain && ended && !onchain.refunded && task.filled < task.slots;
+  useEffect(() => {
+    if (!needsRefund || autoRefund !== "idle") return;
+    setAutoRefund("running");
+    fetch("/api/refund", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id }) })
+      .then((r) => {
+        setAutoRefund(r.ok ? "done" : "failed");
+        if (r.ok) onChange();
+      })
+      .catch(() => setAutoRefund("failed"));
+  }, [needsRefund, autoRefund, task.id, onChange]);
+
   // Asks the server to check every action on X. The claim re-checks server-side.
   async function verify() {
     setError("");
@@ -198,14 +213,21 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
       <div className="mt-4 space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 text-sm">
         <p>You created this task. {task.filled} of {task.slots} slots claimed.</p>
         {onchain!.refunded ? (
-          <p className="text-muted">Unclaimed rewards were refunded to you.</p>
-        ) : ended ? (
-          <button className="btn-primary w-full py-3" disabled={!!busy} onClick={refund}>
-            {busy === "refund" ? "Refunding…" : `Refund ${unclaimed.toLocaleString()} ${task.token}`}
-          </button>
-        ) : (
-          <p className="text-muted">After the task ends you can refund the unclaimed slots here.</p>
-        )}
+          <p className="text-muted">Unclaimed rewards were refunded to you automatically.</p>
+        ) : ended && task.filled < task.slots ? (
+          autoRefund === "running" ? (
+            <p className="text-muted">Refunding {unclaimed.toLocaleString("en-US")} {task.token} to your wallet…</p>
+          ) : (
+            // Fallback if the automatic refund didn't go through
+            <button className="btn-primary w-full py-3" disabled={!!busy} onClick={refund}>
+              {busy === "refund" ? "Refunding…" : `Refund ${unclaimed.toLocaleString("en-US")} ${task.token}`}
+            </button>
+          )
+        ) : !ended ? (
+          <p className="text-muted">
+            If the task isn&apos;t fully claimed when it ends, the remaining rewards are refunded to your wallet automatically.
+          </p>
+        ) : null}
         {!ended && (
           <ShareButton
             label="Share your task on X"

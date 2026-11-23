@@ -16,7 +16,7 @@ smart contract.
   The title is generated automatically (e.g. "Follow + Like @Xtaskfun").
 - **Do tasks & claim** — connect a wallet, open each step on X, claim the reward.
 - **Escrow smart contract** — funds are held by the contract, not by xtask. Reward and number of people set by the creator (up to 10,000),
-  one claim per wallet, unclaimed slots refundable to the creator after the task ends (30 days).
+  one claim per wallet, unclaimed rewards refunded to the creator automatically when the task ends (3 days).
 - **Multi-chain** — Base and Robinhood Chain (plus Base Sepolia for testing).
 - **Many wallets** — connected with [Privy](https://privy.io): MetaMask, OKX, Robinhood Wallet,
   Coinbase, Binance, Bitget, Rainbow, Phantom, Zerion, Bybit, Safe, WalletConnect and any browser wallet.
@@ -76,7 +76,10 @@ The escrow contract is [`contracts/contracts/XTaskEscrow.sol`](contracts/contrac
 2. **Claim** — the site asks `/api/claim` for a signature (EIP-712) made by the **signer** key,
    then the user calls `claim()` and receives the reward from the contract. One claim per wallet,
    no more claims than people set, signatures expire after 10 minutes.
-3. **Refund** — after the task ends, the creator calls `refund()` to get the unclaimed slots back.
+3. **Refund** — tasks run 3 days. After that, unclaimed rewards are refunded to the creator
+   automatically: a daily Vercel Cron job (`/api/cron/refunds`) and opening the task page both
+   trigger `refund()`, which anyone may call but which always pays the creator. The keeper wallet
+   (`KEEPER_PRIVATE_KEY`, or the signer key) pays the gas and needs a little ETH on each network.
 
 The contract owner can change the signer and the fee (max 10%, new tasks only). It cannot move anyone's pool.
 See [`contracts/README.md`](contracts/README.md) for details and deployment.

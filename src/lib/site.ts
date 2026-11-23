@@ -18,24 +18,25 @@ export const VERIFICATION_MODE: "none" | "x" =
   process.env.NEXT_PUBLIC_VERIFICATION_MODE === "x" ? "x" : "none";
 
 /**
- * Reset point per network: tasks with an id up to this number are hidden from the site,
- * the stats and the leaderboard (e.g. test tasks). On-chain data can't be deleted; this only
- * stops the site from showing or counting them. Raise the number to reset again.
+ * Reset point per escrow contract: tasks with an id up to this number are hidden from the site,
+ * the stats and the leaderboard (e.g. test tasks). Keyed by contract address, so a newly deployed
+ * contract starts clean. On-chain data can't be deleted; this only stops the site showing it.
  */
-export const RESET_UP_TO: Record<number, number> = {
-  4663: 2, // Robinhood Chain: test tasks #1–#2 (23 Nov 2026)
-  8453: 0, // Base: nothing hidden
+export const RESET_UP_TO: Record<string, number> = {
+  // Robinhood Chain escrow v2: test tasks #1–#2 (23 Nov 2026)
+  "0x3ae9e77b5c880e12f545a20825d24bcfaf1b7fad": 2,
 };
 
 /** Single tasks to hide, as "<chainId>-<taskId>". */
 export const HIDDEN_TASKS = new Set<string>([]);
 
-export function isHiddenTask(chainId: number, taskId: bigint | number) {
-  return BigInt(taskId) <= BigInt(RESET_UP_TO[chainId] ?? 0) || HIDDEN_TASKS.has(`${chainId}-${taskId}`);
+export function isHiddenTask(chainId: number, taskId: bigint | number, escrow: string) {
+  const upTo = RESET_UP_TO[escrow.toLowerCase()] ?? 0;
+  return BigInt(taskId) <= BigInt(upTo) || HIDDEN_TASKS.has(`${chainId}-${taskId}`);
 }
 
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
-export const TASK_DURATION_DAYS = 30;
+export const TASK_DURATION_DAYS = 3;
 
 /** Public source code. */
 export const GITHUB_URL = "https://github.com/xtaskfun/xtask";

@@ -48,7 +48,7 @@ export async function buildLeaderboard(): Promise<{ rows: LeaderboardRow[]; ethU
     for (let offset = 0n; ; offset += PAGE) {
       const [ids, list] = await client.readContract({ address: escrow.address, abi: escrowAbi, functionName: "getTasks", args: [offset, PAGE] });
       list.forEach((t, i) => {
-        if (isHiddenTask(escrow.chain.id, ids[i])) return;
+        if (isHiddenTask(escrow.chain.id, ids[i], escrow.address)) return;
         const token = findToken(escrow.chain.id, t.token);
         const usd = spentUsd({ ...t, symbol: token.symbol, decimals: token.decimals }, feeBps, price);
         if (usd === null || usd <= 0) return;
@@ -96,7 +96,7 @@ export async function buildStats(): Promise<SiteStats> {
       }
       const [ids, list] = page;
       list.forEach((t, i) => {
-        if (isHiddenTask(escrow.chain.id, ids[i])) return;
+        if (isHiddenTask(escrow.chain.id, ids[i], escrow.address)) return;
         creators.add(t.creator.toLowerCase());
         stats.claims += t.claimed;
         if (!t.refunded && t.endsAt > now && t.claimed < t.slots) stats.activeTasks += 1;

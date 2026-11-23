@@ -124,7 +124,7 @@ describe("XTaskEscrow", () => {
     expect(await token.read.balanceOf([escrow.address])).to.equal(0n);
   });
 
-  it("refunds unclaimed slots to the creator after the end, only once", async () => {
+  it("refunds unclaimed slots to the creator after the end, only once — anyone can trigger it", async () => {
     const { token, escrow, alice, creator, sign, as, endsAt } = await loadFixture(withTask);
     const deadline = BigInt(await time.latest()) + 600n;
     await (await as(alice)).write.claim([1n, deadline, await sign(1n, alice.account.address, deadline)]);
@@ -132,10 +132,11 @@ describe("XTaskEscrow", () => {
     const c = await as(creator);
     await expect(c.write.refund([1n])).to.be.rejectedWith("NotEnded");
     await time.increaseTo(endsAt + 1n);
-    await expect((await as(alice)).write.refund([1n])).to.be.rejectedWith("NotCreator");
-
+    // Someone else (e.g. the keeper) triggers it; the money still goes to the creator
+    const aliceBefore = await token.read.balanceOf([alice.account.address]);
     const before = await token.read.balanceOf([creator.account.address]);
-    await c.write.refund([1n]);
+    await (await as(alice)).write.refund([1n]);
+    expect(await token.read.balanceOf([alice.account.address])).to.equal(aliceBefore);
     expect((await token.read.balanceOf([creator.account.address])) - before).to.equal(parseUnits("99", 6));
     expect(await token.read.balanceOf([escrow.address])).to.equal(0n);
     await expect(c.write.refund([1n])).to.be.rejectedWith("AlreadyRefunded");
