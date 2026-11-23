@@ -1,5 +1,9 @@
-/** Public site address (link previews, docs). NEXT_PUBLIC_SITE_URL overrides it. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://xtask.fun").replace(/\/$/, "");
+/**
+ * Public site address used in share links and link previews. NEXT_PUBLIC_SITE_URL overrides it,
+ * except a *.vercel.app address, which is ignored so shared links always use the real domain.
+ */
+const envSite = (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
+export const SITE_URL = envSite && !/\.vercel\.app$/i.test(envSite) ? envSite : "https://xtask.fun";
 
 /** Official xtask.fun accounts. */
 export const X_HANDLE = "Xtaskfun";
