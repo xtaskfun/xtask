@@ -202,7 +202,7 @@ export default function CreatePage() {
     approve: `Approving ${tokenSymbol}…`,
     create: "Confirm in wallet…",
     confirm: "Publishing…",
-    done: "✅ Task published",
+    done: "Task published ✓",
   }[step];
 
   return (
@@ -238,7 +238,6 @@ export default function CreatePage() {
                     onClick={() => toggleAction(a)}
                     className={`rounded-xl border p-3 text-sm transition ${on ? "border-rainbow text-white" : "border-line text-muted hover:text-white"}`}
                   >
-                    <div className="text-xl">{ACTION_META[a].icon}</div>
                     {ACTION_META[a].label}
                   </button>
                 );

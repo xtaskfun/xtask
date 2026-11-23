@@ -80,12 +80,12 @@ export function parseMeta(raw: string): TaskMeta {
   };
 }
 
-export const ACTION_META: Record<TaskAction, { label: string; icon: string }> = {
-  follow: { label: "Follow", icon: "👤" },
-  like: { label: "Like", icon: "❤️" },
-  retweet: { label: "Repost", icon: "🔁" },
-  reply: { label: "Reply", icon: "💬" },
-  quote: { label: "Quote", icon: "✍️" },
+export const ACTION_META: Record<TaskAction, { label: string }> = {
+  follow: { label: "Follow" },
+  like: { label: "Like" },
+  retweet: { label: "Repost" },
+  reply: { label: "Reply" },
+  quote: { label: "Quote" },
 };
 
 // Demo data — shown while NEXT_PUBLIC_ESCROW_ADDRESS is not set.

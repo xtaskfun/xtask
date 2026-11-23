@@ -223,7 +223,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
   const needX = CHECK_ON_X && !!onchain && !claimed && !x.user;
 
   const claimLabel = claimed
-    ? "🎉 Reward claimed"
+    ? "Reward claimed ✓"
     : busy === "claim"
       ? "Claiming…"
       : full
@@ -258,7 +258,7 @@ export default function TaskRunner({ task, isDemo, onChange }: { task: Task; isD
                 {st === "done" ? "✓" : st === "missing" ? "!" : st === "waiting" ? <Spinner /> : i + 1}
               </span>
               <div>
-                <div className="font-medium">{ACTION_META[a].icon} {ACTION_META[a].label}</div>
+                <div className="font-medium">{ACTION_META[a].label}</div>
                 <div className="text-xs text-muted">
                   {st === "missing"
                     ? "Not found on X yet"

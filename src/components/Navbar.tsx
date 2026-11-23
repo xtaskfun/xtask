@@ -7,11 +7,37 @@ import Logo from "./Logo";
 import XConnect from "./XConnect";
 import { VERIFICATION_MODE } from "@/lib/site";
 
+/** Simple line icons (24px viewBox) for the mobile bottom navigation. */
+const ICONS: Record<string, React.ReactNode> = {
+  home: <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />,
+  tasks: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </>
+  ),
+  create: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8M8 12h8" />
+    </>
+  ),
+  leaderboard: <path d="M8 21V11M12 21V5M16 21v-7M4 21h16" />,
+};
+
+function NavIcon({ name }: { name: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {ICONS[name]}
+    </svg>
+  );
+}
+
 export const NAV = [
-  { href: "/", label: "Home", icon: "🏠" },
-  { href: "/tasks", label: "Tasks", icon: "📋" },
-  { href: "/create", label: "Create", icon: "➕" },
-  { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/tasks", label: "Tasks", icon: "tasks" },
+  { href: "/create", label: "Create", icon: "create" },
+  { href: "/leaderboard", label: "Leaderboard", icon: "leaderboard" },
 ];
 
 function isActive(path: string, href: string) {
@@ -61,7 +87,9 @@ export default function Navbar() {
               isActive(path, n.href) ? "text-white [&>span]:scale-110" : "text-muted"
             }`}
           >
-            <span className="text-lg transition">{n.icon}</span>
+            <span className="transition">
+              <NavIcon name={n.icon} />
+            </span>
             {n.label}
           </Link>
         ))}

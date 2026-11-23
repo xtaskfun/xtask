@@ -7,12 +7,12 @@ import Marquee from "@/components/Marquee";
 import { VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
 const STEPS = [
-  { icon: "👛", title: "Connect wallet", text: "MetaMask, OKX, Robinhood Wallet, Coinbase and more." },
+  { title: "Connect wallet", text: "MetaMask, OKX, Robinhood Wallet, Coinbase and more." },
   VERIFICATION_MODE === "x"
-    ? { icon: "𝕏", title: "Link your X", text: "Connect your X account so we can verify your engagement." }
-    : { icon: "🎯", title: "Pick a task", text: "Browse open campaigns and choose the rewards you like." },
-  { icon: "⚡", title: "Do the task", text: "Follow, like, repost, reply or quote — it takes seconds." },
-  { icon: "💰", title: "Claim", text: "Hit Claim and the reward lands straight in your wallet." },
+    ? { title: "Link your X", text: "Connect your X account so we can verify your engagement." }
+    : { title: "Pick a task", text: "Browse open campaigns and choose the rewards you like." },
+  { title: "Do the task", text: "Follow, like, repost, reply or quote — it takes seconds." },
+  { title: "Claim", text: "Hit Claim and the reward lands straight in your wallet." },
 ];
 
 export default function HomePage() {
@@ -80,12 +80,11 @@ export default function HomePage() {
           <div className="absolute left-[12%] right-[12%] top-9 hidden h-px bg-rainbow opacity-40 lg:block" />
           {STEPS.map((s, i) => (
             <div key={s.title} className="glow-card p-6 text-center">
-              <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-black text-3xl ring-1 ring-white/10">
+              <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-black ring-1 ring-white/10">
                 <span className="absolute -inset-px -z-10 rounded-2xl bg-rainbow opacity-60 blur-md" />
-                {s.icon}
+                <span className="font-display text-rainbow text-2xl font-bold">0{i + 1}</span>
               </div>
-              <div className="text-rainbow mt-5 font-mono text-xs font-bold">STEP {i + 1}</div>
-              <h3 className="mt-1 text-lg font-bold">{s.title}</h3>
+              <h3 className="mt-5 text-lg font-bold">{s.title}</h3>
               <p className="mt-2 text-sm text-white/55">{s.text}</p>
             </div>
           ))}
@@ -112,7 +111,7 @@ export default function HomePage() {
             Launch a campaign
           </Link>
           <Link href="/leaderboard" className="btn-ghost px-6 py-3 text-base">
-            🏆 Leaderboard
+            Leaderboard
           </Link>
         </div>
       </section>

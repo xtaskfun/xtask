@@ -10,7 +10,11 @@ import type { LeaderboardRow } from "@/lib/server/leaderboard";
 type Data = { rows: LeaderboardRow[]; ethUsd: number | null; updatedAt: string; error?: string };
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
-const medal = (i: number) => ["🥇", "🥈", "🥉"][i] ?? `${i + 1}`;
+// Top 3 get a gold / silver / bronze badge instead of a plain number
+const MEDAL = ["bg-[#ffd54a] text-black", "bg-[#d9dde3] text-black", "bg-[#d08a4a] text-black"];
+const medal = (i: number) => (
+  <span className={`grid h-7 w-7 place-items-center rounded-full text-sm font-bold ${MEDAL[i] ?? "text-muted"}`}>{i + 1}</span>
+);
 const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export default function LeaderboardPage() {
@@ -25,7 +29,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="py-10">
-      <h1 className="text-4xl font-bold md:text-5xl">🏆 <span className="text-rainbow-flow">Leaderboard</span></h1>
+      <h1 className="text-4xl font-bold md:text-5xl"><span className="text-rainbow-flow">Leaderboard</span></h1>
       <p className="mt-1 text-muted">
         Top task creators. Earn <span className="text-rainbow font-semibold">{POINTS_PER_USD} points for every $1</span> you spend on tasks.
       </p>

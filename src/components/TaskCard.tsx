@@ -8,7 +8,7 @@ export function ActionPills({ actions }: { actions: Task["actions"] }) {
     <div className="flex flex-wrap gap-1.5">
       {actions.map((a) => (
         <span key={a} className="rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-xs">
-          {ACTION_META[a].icon} {ACTION_META[a].label}
+          {ACTION_META[a].label}
         </span>
       ))}
     </div>

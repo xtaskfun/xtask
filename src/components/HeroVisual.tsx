@@ -32,8 +32,8 @@ export default function HeroVisual() {
         </div>
         <div className="font-display mt-4 text-xl font-bold">Follow + Like @Xtaskfun</div>
         <div className="mt-3 flex gap-2 text-xs">
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">👤 Follow</span>
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">❤️ Like</span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">Follow</span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">Like</span>
         </div>
         <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
           <div className="h-full w-[72%] rounded-full bg-rainbow-loop bg-[length:200%_100%] animate-shimmer" />

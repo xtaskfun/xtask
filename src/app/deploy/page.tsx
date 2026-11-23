@@ -143,7 +143,7 @@ export default function DeployPage() {
     ].join("\n");
     return (
       <div className="mx-auto max-w-2xl py-10">
-        <h1 className="text-3xl font-bold">🎉 Escrow deployed</h1>
+        <h1 className="text-3xl font-bold">Escrow deployed</h1>
         <p className="mt-2 text-muted">
           Contract:{" "}
           <a className="text-brand hover:underline" href={`${deployed.explorer}/address/${deployed.address}`} target="_blank" rel="noreferrer noopener">
