@@ -35,10 +35,16 @@ export function makeXApi(accessToken: string, base = process.env.X_API_BASE_URL 
   };
 }
 
-// How deep we look. Recent activity is near the top, so a few pages is plenty.
-const FOLLOWING_PAGES = 5; // up to 5,000 accounts followed
-const LIKES_PAGES = 2; // last ~200 likes
-const TIMELINE_PAGES = 2; // last ~200 posts / reposts / replies
+// How deep we look. X bills reads per item returned, so we only read the newest few: lists come
+// newest-first, and people verify right after doing the action. One page each, sizes tunable via env.
+const envInt = (name: string, def: number, min: number, max: number) => {
+  const n = Number(process.env[name]);
+  return Number.isFinite(n) && n > 0 ? Math.min(max, Math.max(min, Math.floor(n))) : def;
+};
+const FOLLOWING_SIZE = () => envInt("X_CHECK_FOLLOWING", 20, 1, 1000); // newest accounts followed
+const LIKES_SIZE = () => envInt("X_CHECK_LIKES", 10, 10, 100); // newest likes (X minimum is 10)
+const TIMELINE_SIZE = () => envInt("X_CHECK_POSTS", 10, 5, 100); // newest posts/reposts/replies (X minimum is 5)
+const PAGES = 1;
 
 async function* paginate(api: XApi, path: string, maxPages: number) {
   let token: string | undefined;
@@ -51,19 +57,22 @@ async function* paginate(api: XApi, path: string, maxPages: number) {
   }
 }
 
-async function follows(api: XApi, me: string, handle: string) {
-  const target = await api(`/users/by/username/${encodeURIComponent(handle)}`);
-  const targetId: string | undefined = target.data?.id;
+/** Looks up an account id by handle, optionally through a cache (ids never change). */
+export type UserIdLookup = (handle: string, fetchId: () => Promise<string | undefined>) => Promise<string | undefined>;
+
+async function follows(api: XApi, me: string, handle: string, lookup?: UserIdLookup) {
+  const fetchId = async () => (await api(`/users/by/username/${encodeURIComponent(handle)}`)).data?.id as string | undefined;
+  const targetId = lookup ? await lookup(handle, fetchId) : await fetchId();
   if (!targetId) return false;
   if (targetId === me) return true;
-  for await (const users of paginate(api, `/users/${me}/following?max_results=1000`, FOLLOWING_PAGES)) {
+  for await (const users of paginate(api, `/users/${me}/following?max_results=${FOLLOWING_SIZE()}`, PAGES)) {
     if (users.some((u) => u.id === targetId)) return true;
   }
   return false;
 }
 
 async function liked(api: XApi, me: string, tweetId: string) {
-  for await (const tweets of paginate(api, `/users/${me}/liked_tweets?max_results=100`, LIKES_PAGES)) {
+  for await (const tweets of paginate(api, `/users/${me}/liked_tweets?max_results=${LIKES_SIZE()}`, PAGES)) {
     if (tweets.some((t) => t.id === tweetId)) return true;
   }
   return false;
@@ -72,8 +81,8 @@ async function liked(api: XApi, me: string, tweetId: string) {
 /** One timeline scan answers repost, reply and quote at once. */
 async function timelineRefs(api: XApi, me: string, tweetId: string) {
   const found = new Set<"retweeted" | "replied_to" | "quoted">();
-  const path = `/users/${me}/tweets?max_results=100&tweet.fields=referenced_tweets`;
-  for await (const tweets of paginate(api, path, TIMELINE_PAGES)) {
+  const path = `/users/${me}/tweets?max_results=${TIMELINE_SIZE()}&tweet.fields=referenced_tweets`;
+  for await (const tweets of paginate(api, path, PAGES)) {
     for (const t of tweets) for (const r of t.referenced_tweets ?? []) if (r.id === tweetId) found.add(r.type);
     if (found.size === 3) break;
   }
@@ -83,13 +92,19 @@ async function timelineRefs(api: XApi, me: string, tweetId: string) {
 export type VerifyResult = { ok: boolean; actions: Partial<Record<TaskAction, boolean>> };
 
 /** Checks every required action for X user `me`. */
-export async function verifyActions(api: XApi, me: string, target: XTarget, actions: TaskAction[]): Promise<VerifyResult> {
+export async function verifyActions(
+  api: XApi,
+  me: string,
+  target: XTarget,
+  actions: TaskAction[],
+  lookup?: UserIdLookup
+): Promise<VerifyResult> {
   const out: VerifyResult["actions"] = {};
   const needsTimeline = actions.some((a) => a === "retweet" || a === "reply" || a === "quote");
   const refs = needsTimeline && target.tweetId ? await timelineRefs(api, me, target.tweetId) : new Set<string>();
 
   for (const a of actions) {
-    if (a === "follow") out.follow = await follows(api, me, target.handle);
+    if (a === "follow") out.follow = await follows(api, me, target.handle, lookup);
     else if (!target.tweetId) out[a] = false;
     else if (a === "like") out.like = await liked(api, me, target.tweetId);
     else if (a === "retweet") out.retweet = refs.has("retweeted");

@@ -49,9 +49,17 @@ export async function loadOpenTask(escrow: Escrow, taskId: bigint) {
 }
 
 /** Runs the X checks for this account and task, caching a pass. */
+/** Minimum seconds between two X checks of the same account on the same task (X API reads cost credits). */
+export const VERIFY_COOLDOWN = 30;
+
 export async function verifyForTask(store: Store, session: XSession, escrow: Escrow, taskId: bigint, meta: TaskMeta): Promise<VerifyResult> {
   if (await store.get(keys.verified(escrow, taskId, session.id))) {
     return { ok: true, actions: Object.fromEntries(meta.actions.map((a) => [a, true])) };
+  }
+  // Each check spends X API credits — don't let repeated clicks drain them
+  const cooldownKey = `xtask:verify-cooldown:${escrow.chain.id}:${escrow.address.toLowerCase()}:${taskId}:${session.id}`;
+  if (!(await store.setNX(cooldownKey, "1", VERIFY_COOLDOWN))) {
+    throw new HttpError(429, `Please wait ${VERIFY_COOLDOWN} seconds before checking again.`);
   }
 
   const eligible = accountEligibility(session);
@@ -62,7 +70,16 @@ export async function verifyForTask(store: Store, session: XSession, escrow: Esc
 
   let result: VerifyResult;
   try {
-    result = await verifyActions(makeXApi(session.accessToken), session.id, target, meta.actions);
+    // X account ids never change: cache handle → id so it's looked up once
+    const lookup = async (handle: string, fetchId: () => Promise<string | undefined>) => {
+      const k = `xtask:xuid:${handle.toLowerCase()}`;
+      const cached = await store.get(k);
+      if (cached) return cached;
+      const id = await fetchId();
+      if (id) await store.set(k, id);
+      return id;
+    };
+    result = await verifyActions(makeXApi(session.accessToken), session.id, target, meta.actions, lookup);
   } catch (e) {
     if (e instanceof XApiError) {
       const why = e.detail ? ` (${e.detail})` : "";

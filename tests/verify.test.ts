@@ -31,10 +31,10 @@ function fakeApi(opts: {
 const post = { handle: "proj", tweetId: "555" };
 
 describe("verifyActions", () => {
-  it("passes when every action is found, across pages", async () => {
+  it("passes when every action is found among the newest items", async () => {
     const api = fakeApi({
-      following: [["1", "2"], ["3", TARGET_ID]],
-      likes: [["9"], ["555"]],
+      following: [["1", TARGET_ID]],
+      likes: [["9", "555"]],
       timeline: [[{ id: "a", referenced_tweets: [{ type: "retweeted", id: "555" }] }, { id: "b", referenced_tweets: [{ type: "replied_to", id: "555" }] }]],
     });
     const r = await verifyActions(api, ME, post, ["follow", "like", "retweet", "reply"]);
@@ -59,11 +59,20 @@ describe("verifyActions", () => {
     expect(api.calls.filter((c) => c.includes("/tweets")).length).toBe(1);
   });
 
-  it("stops paging following after the limit", async () => {
+  it("reads only one small page per list (X bills per item read)", async () => {
     const pages = Array.from({ length: 20 }, (_, i) => [String(1000 + i)]);
-    const api = fakeApi({ following: pages });
-    expect((await verifyActions(api, ME, { handle: "proj" }, ["follow"])).ok).toBe(false);
-    expect(api.calls.filter((c) => c.includes("/following")).length).toBe(5);
+    const api = fakeApi({ following: pages, likes: [["1"], ["555"]] });
+    expect((await verifyActions(api, ME, { handle: "proj", tweetId: "555" }, ["follow", "like"])).ok).toBe(false);
+    expect(api.calls.filter((c) => c.includes("/following")).length).toBe(1);
+    expect(api.calls.find((c) => c.includes("/following"))).toContain("max_results=20");
+    expect(api.calls.find((c) => c.includes("/liked_tweets"))).toContain("max_results=10");
+  });
+
+  it("uses the id cache instead of looking the target up again", async () => {
+    const api = fakeApi({ following: [[TARGET_ID]] });
+    const lookup = async () => TARGET_ID;
+    expect((await verifyActions(api, ME, { handle: "proj" }, ["follow"], lookup)).ok).toBe(true);
+    expect(api.calls.some((c) => c.startsWith("/users/by/username"))).toBe(false);
   });
 
   it("fails post actions when the task only links a profile", async () => {
