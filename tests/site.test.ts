@@ -26,3 +26,14 @@ describe("isHiddenTask (reset point per contract)", () => {
     expect(isHiddenTask(8453, 1n, NEW)).toBe(false);
   });
 });
+
+describe("X OAuth callback URL", () => {
+  it("always uses the public domain, even if NEXT_PUBLIC_SITE_URL is a vercel.app address", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://xtask-zeta.vercel.app");
+    const { redirectUri } = await import("@/lib/server/x-oauth");
+    expect(redirectUri("https://xtask-zeta.vercel.app")).toBe("https://xtask.fun/api/auth/x/callback");
+    expect(redirectUri("https://xtask.fun")).toBe("https://xtask.fun/api/auth/x/callback");
+    expect(redirectUri("http://localhost:3000")).toBe("http://localhost:3000/api/auth/x/callback");
+  });
+});

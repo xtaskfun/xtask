@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import { SITE_URL } from "../site";
 
 // X_OAUTH_SCOPES (space separated) can override this, e.g. to debug a login with fewer permissions.
 export const X_SCOPES = (process.env.X_OAUTH_SCOPES || "tweet.read users.read follows.read like.read offline.access")
@@ -23,8 +24,10 @@ export function isXConfigured() {
 
 /** Callback URL — must match exactly what is registered in the X developer portal. */
 export function redirectUri(origin: string) {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || origin).replace(/\/$/, "");
-  return `${base}/api/auth/x/callback`;
+  // The public domain (xtask.fun). A *.vercel.app NEXT_PUBLIC_SITE_URL is ignored, like for share links.
+  // Local development keeps using the request origin.
+  const base = /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(origin) ? origin : SITE_URL;
+  return `${base.replace(/\/$/, "")}/api/auth/x/callback`;
 }
 
 export function pkcePair() {
