@@ -37,21 +37,20 @@ export default function Stats() {
   });
 
   const items = [
-    { label: "Rewards paid", icon: "💸", value: data?.rewardsPaidUsd, format: fmtUsd },
-    { label: "Active tasks", icon: "⚡", value: data?.activeTasks, format: fmtInt },
-    { label: "Rewards claimed", icon: "🎁", value: data?.claims, format: fmtInt },
-    { label: "Projects", icon: "🚀", value: data?.projects, format: fmtInt },
+    { label: "Rewards paid", value: data?.rewardsPaidUsd, format: fmtUsd },
+    { label: "Active tasks", value: data?.activeTasks, format: fmtInt },
+    { label: "Rewards claimed", value: data?.claims, format: fmtInt },
+    { label: "Projects", value: data?.projects, format: fmtInt },
   ];
 
   return (
     <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {items.map((s) => (
         <div key={s.label} className="glow-card p-5 md:p-6">
-          <div className="text-xl">{s.icon}</div>
-          <div className="font-display mt-3 text-3xl font-bold md:text-4xl">
+          <div className="text-sm text-white/50">{s.label}</div>
+          <div className="font-display mt-2 text-3xl font-bold md:text-4xl">
             {s.value === undefined ? <span className="text-white/30">—</span> : <CountUp value={s.value} format={s.format} />}
           </div>
-          <div className="mt-1 text-sm text-white/50">{s.label}</div>
         </div>
       ))}
     </section>
