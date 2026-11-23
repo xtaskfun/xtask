@@ -6,7 +6,7 @@ import { explorerUrl } from "@/lib/chains";
 import { TOKENS } from "@/lib/tokens";
 import { DEFAULT_FEE_BPS } from "@/lib/fees";
 import { POINTS_PER_USD } from "@/lib/points";
-import { TASK_DURATION_DAYS, VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
+import { GITHUB_URL, TASK_DURATION_DAYS, VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Docs — xtask.fun",
@@ -234,6 +234,13 @@ export default function DocsPage() {
                   The contract has <strong>not been audited</strong> yet. Only use amounts you are comfortable with.
                 </li>
                 <li>xtask.fun will never ask for your seed phrase or private key.</li>
+                <li>
+                  The website and smart contract code are open source on{" "}
+                  <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
+                    GitHub
+                  </a>
+                  .
+                </li>
               </ul>
             </>
           ),

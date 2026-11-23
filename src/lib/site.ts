@@ -36,3 +36,6 @@ export function isHiddenTask(chainId: number, taskId: bigint | number) {
 
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
 export const TASK_DURATION_DAYS = 30;
+
+/** Public source code. */
+export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
