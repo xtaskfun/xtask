@@ -20,10 +20,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-grid [background-size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
         <div className="pointer-events-none absolute left-1/2 top-16 -z-10 h-56 w-[36rem] max-w-full -translate-x-1/2 rounded-full bg-rainbow opacity-25 blur-[110px]" />
 
-        <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/5 px-3 py-1 text-xs text-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-rainbow" /> Live on Base & Robinhood Chain
-        </span>
-        <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
+        <h1 className="mx-auto max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
           Engage on X.<br />Earn <span className="text-rainbow">onchain</span>.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-muted md:text-lg">
