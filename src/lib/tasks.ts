@@ -12,8 +12,61 @@ export type Task = {
   slots: number;
   filled: number;
   endsAt: string; // ISO date
-  category: "Project" | "Meme" | "NFT" | "DeFi" | "Community";
+  category: Category;
+  /** Present only for tasks that live in the escrow contract. */
+  onchain?: {
+    creator: `0x${string}`;
+    token: `0x${string}`;
+    decimals: number;
+    rewardRaw: bigint;
+    refunded: boolean;
+    ended: boolean;
+  };
 };
+
+export const CATEGORIES = ["Project", "Meme", "NFT", "DeFi", "Community"] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+/** Off-chain details stored as JSON in the contract's `meta` field. */
+export type TaskMeta = {
+  title: string;
+  description: string;
+  targetUrl: string;
+  actions: TaskAction[];
+  category: Category;
+  handle: string;
+};
+
+const isAction = (a: unknown): a is TaskAction =>
+  typeof a === "string" && ["follow", "like", "retweet", "reply", "quote"].includes(a);
+
+/** Only allow http(s) links — meta is user supplied, so never trust it as-is. */
+export function safeUrl(u: unknown) {
+  try {
+    const url = new URL(String(u));
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : "https://x.com";
+  } catch {
+    return "https://x.com";
+  }
+}
+
+export function parseMeta(raw: string): TaskMeta {
+  let m: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") m = parsed;
+  } catch {}
+  const str = (v: unknown, max: number, d = "") => (typeof v === "string" ? v.slice(0, max) : d);
+  const handle = str(m.handle, 30).replace(/[^A-Za-z0-9_]/g, "");
+  return {
+    title: str(m.title, 100, "Untitled task"),
+    description: str(m.description, 500),
+    targetUrl: safeUrl(m.targetUrl),
+    actions: Array.isArray(m.actions) ? m.actions.filter(isAction) : [],
+    category: CATEGORIES.includes(m.category as Category) ? (m.category as Category) : "Project",
+    handle: handle ? `@${handle}` : "",
+  };
+}
 
 export const ACTION_META: Record<TaskAction, { label: string; icon: string }> = {
   follow: { label: "Follow", icon: "👤" },
@@ -23,7 +76,7 @@ export const ACTION_META: Record<TaskAction, { label: string; icon: string }> = 
   quote: { label: "Quote", icon: "✍️" },
 };
 
-// Mock data — replace with an API / smart-contract read later.
+// Demo data — shown while NEXT_PUBLIC_ESCROW_ADDRESS is not set.
 export const TASKS: Task[] = [
   {
     id: "1",
@@ -34,8 +87,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com/base",
     rewardPerUser: 2,
     token: "USDC",
-    slots: 500,
-    filled: 312,
+    slots: 100,
+    filled: 62,
     endsAt: "2026-12-05T00:00:00Z",
     category: "Project",
   },
@@ -48,8 +101,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com",
     rewardPerUser: 500,
     token: "PEPE",
-    slots: 1000,
-    filled: 870,
+    slots: 100,
+    filled: 87,
     endsAt: "2026-11-30T00:00:00Z",
     category: "Meme",
   },
@@ -62,8 +115,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com",
     rewardPerUser: 0.002,
     token: "ETH",
-    slots: 200,
-    filled: 41,
+    slots: 100,
+    filled: 21,
     endsAt: "2026-12-12T00:00:00Z",
     category: "NFT",
   },
@@ -76,8 +129,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com",
     rewardPerUser: 5,
     token: "USDT",
-    slots: 300,
-    filled: 150,
+    slots: 100,
+    filled: 50,
     endsAt: "2026-12-20T00:00:00Z",
     category: "DeFi",
   },
@@ -90,8 +143,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com",
     rewardPerUser: 1,
     token: "USDC",
-    slots: 2000,
-    filled: 640,
+    slots: 100,
+    filled: 32,
     endsAt: "2026-12-01T00:00:00Z",
     category: "Community",
   },
@@ -104,8 +157,8 @@ export const TASKS: Task[] = [
     targetUrl: "https://x.com",
     rewardPerUser: 1.5,
     token: "ARB",
-    slots: 800,
-    filled: 799,
+    slots: 100,
+    filled: 99,
     endsAt: "2026-11-28T00:00:00Z",
     category: "Project",
   },

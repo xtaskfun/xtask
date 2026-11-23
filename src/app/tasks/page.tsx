@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import TaskCard from "@/components/TaskCard";
-import { ACTION_META, TASKS, TaskAction } from "@/lib/tasks";
+import { DemoBanner, Grid } from "@/components/TaskGrid";
+import { ACTION_META, CATEGORIES as CATS, TaskAction } from "@/lib/tasks";
+import { useTasks } from "@/lib/useTasks";
 
-const CATEGORIES = ["All", "Project", "Meme", "NFT", "DeFi", "Community"] as const;
+const CATEGORIES = ["All", ...CATS] as const;
 const SORTS = { newest: "Newest", reward: "Highest reward", ending: "Ending soon" } as const;
 
 export default function TasksPage() {
@@ -12,9 +13,10 @@ export default function TasksPage() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("All");
   const [action, setAction] = useState<TaskAction | "all">("all");
   const [sort, setSort] = useState<keyof typeof SORTS>("newest");
+  const { tasks, isDemo, isLoading } = useTasks();
 
   const list = useMemo(() => {
-    let r = TASKS.filter(
+    let r = tasks.filter(
       (t) =>
         (cat === "All" || t.category === cat) &&
         (action === "all" || t.actions.includes(action)) &&
@@ -23,12 +25,13 @@ export default function TasksPage() {
     if (sort === "reward") r = [...r].sort((a, b) => b.rewardPerUser - a.rewardPerUser);
     if (sort === "ending") r = [...r].sort((a, b) => +new Date(a.endsAt) - +new Date(b.endsAt));
     return r;
-  }, [q, cat, action, sort]);
+  }, [tasks, q, cat, action, sort]);
 
   return (
     <div className="py-10">
       <h1 className="text-3xl font-bold">Tasks</h1>
-      <p className="mt-1 text-muted">Pick a task, complete it on X, claim your reward.</p>
+      <p className="mt-1 text-muted">Pick a task, complete it on X, claim 1% of the pool.</p>
+      {isDemo && <DemoBanner />}
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row">
         <input className="input md:max-w-sm" placeholder="Search tasks or @handle…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -57,15 +60,9 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {list.length ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((t) => <TaskCard key={t.id} task={t} />)}
-        </div>
-      ) : (
-        <div className="mt-6 rounded-2xl border border-dashed border-line p-12 text-center text-muted">
-          No tasks match your filters.
-        </div>
-      )}
+      <div className="mt-6">
+        <Grid tasks={list} isLoading={isLoading} />
+      </div>
     </div>
   );
 }

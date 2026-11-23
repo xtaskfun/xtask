@@ -1,6 +1,5 @@
 import Link from "next/link";
-import TaskCard from "@/components/TaskCard";
-import { TASKS } from "@/lib/tasks";
+import TrendingTasks from "@/components/TaskGrid";
 
 const STATS = [
   { label: "Rewards paid", value: "$248K" },
@@ -13,7 +12,7 @@ const STEPS = [
   { n: "01", title: "Connect wallet", text: "Pick from MetaMask, OKX, Trust, Phantom, Coinbase and more." },
   { n: "02", title: "Link your X", text: "Connect your X account so we can verify your engagement." },
   { n: "03", title: "Do tasks", text: "Follow, like, repost, reply or quote — each task takes seconds." },
-  { n: "04", title: "Get paid", text: "Rewards land in your wallet once the task is verified." },
+  { n: "04", title: "Claim", text: "Hit Claim and 1% of the task pool lands straight in your wallet." },
 ];
 
 export default function HomePage() {
@@ -54,13 +53,11 @@ export default function HomePage() {
         <div className="mb-6 flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-bold">🔥 Trending tasks</h2>
-            <p className="text-sm text-muted">Highest rewards right now</p>
+            <p className="text-sm text-muted">Filling up fastest right now</p>
           </div>
           <Link href="/tasks" className="text-sm text-muted hover:text-white">View all →</Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TASKS.slice(0, 3).map((t) => <TaskCard key={t.id} task={t} />)}
-        </div>
+        <TrendingTasks />
       </section>
 
       {/* How it works */}

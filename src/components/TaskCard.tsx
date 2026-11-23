@@ -30,6 +30,7 @@ export function Progress({ value, max }: { value: number; max: number }) {
 
 export default function TaskCard({ task }: { task: Task }) {
   const full = task.filled >= task.slots;
+  const ended = task.onchain?.ended;
   return (
     <Link
       href={`/tasks/${task.id}`}
@@ -38,7 +39,7 @@ export default function TaskCard({ task }: { task: Task }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
           <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">
-            {task.creator.slice(1, 3).toUpperCase()}
+            {task.creator.replace(/^@|^0x/, "").slice(0, 2).toUpperCase()}
           </span>
           {task.creator}
         </div>
@@ -61,8 +62,8 @@ export default function TaskCard({ task }: { task: Task }) {
             {task.rewardPerUser} {task.token}
           </div>
         </div>
-        <span className={`text-xs ${full ? "text-red-400" : "text-muted"}`}>
-          {full ? "Full" : `${daysLeft(task.endsAt)}d left`}
+        <span className={`text-xs ${full || ended ? "text-red-400" : "text-muted"}`}>
+          {full ? "Full" : ended ? "Ended" : `${daysLeft(task.endsAt)}d left`}
         </span>
       </div>
     </Link>

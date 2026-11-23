@@ -27,10 +27,24 @@ src/
   components/             # Navbar (+ bottom nav mobile), TaskCard, Footer, Providers
   lib/
     wagmi.ts              # Daftar wallet & chain
-    tasks.ts              # Tipe data + mock tasks
+    tasks.ts              # Tipe data + data demo
+    escrow.ts, tokens.ts  # Alamat contract, chain & daftar token
+    useTasks.ts           # Baca task dari contract
+  app/api/claim/          # Server: verifikasi + tanda tangan claim
+contracts/                # Smart contract escrow (Hardhat)
 ```
 
+## Pembayaran (escrow)
+Dana task disimpan di smart contract `contracts/contracts/XTaskEscrow.sol`:
+- Pembuat task menyetor pool → dibagi 100 slot, tiap orang claim **1% dari pool**.
+- Setelah mengerjakan task, user klik **Claim** → server (`/api/claim`) memverifikasi lalu
+  memberi tanda tangan → user claim langsung dari contract.
+- Setelah task berakhir, slot yang tidak di-claim bisa di-refund ke pembuat.
+
+Cara deploy & env lengkap: lihat [`contracts/README.md`](contracts/README.md).
+Selama `NEXT_PUBLIC_ESCROW_ADDRESS` belum diisi, situs memakai data demo.
+
 ## Langkah berikutnya (TODO)
-- Login X (OAuth 2.0) & verifikasi aksi lewat X API (`TaskRunner.tsx` → `verify`)
-- Backend/database untuk task (ganti mock di `lib/tasks.ts`)
-- Smart contract escrow untuk dana campaign & claim reward (`create/page.tsx` → `onSubmit`)
+- **Wajib sebelum mainnet:** login X (OAuth 2.0) & verifikasi aksi lewat X API
+  (`verifyXActions` di `src/app/api/claim/route.ts`), plus database agar 1 akun X hanya bisa claim sekali per task
+- Audit smart contract

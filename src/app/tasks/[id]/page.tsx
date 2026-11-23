@@ -1,21 +1,33 @@
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import TaskRunner from "./TaskRunner";
 import { ActionPills, Progress } from "@/components/TaskCard";
-import { TASKS, daysLeft, getTask } from "@/lib/tasks";
+import { DemoBanner } from "@/components/TaskGrid";
+import { daysLeft } from "@/lib/tasks";
+import { useTask } from "@/lib/useTasks";
 
-export function generateStaticParams() {
-  return TASKS.map((t) => ({ id: t.id }));
-}
+export default function TaskDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { task, isDemo, isLoading, refetch } = useTask(id);
 
-export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const task = getTask(id);
-  if (!task) notFound();
+  if (isLoading) return <div className="py-32 text-center text-muted">Loading task…</div>;
+  if (!task)
+    return (
+      <div className="py-32 text-center">
+        <h1 className="text-2xl font-bold">Task not found</h1>
+        <Link href="/tasks" className="btn-primary mt-6">Browse tasks</Link>
+      </div>
+    );
+
+  const ended = task.onchain?.ended;
+  const pool = task.rewardPerUser * task.slots;
 
   return (
     <div className="py-10">
       <Link href="/tasks" className="text-sm text-muted hover:text-white">← Back to tasks</Link>
+      {isDemo && <DemoBanner />}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="rounded-2xl border border-line bg-card p-6">
@@ -24,23 +36,23 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
             by {task.creator}
           </div>
           <h1 className="mt-3 text-2xl font-bold md:text-3xl">{task.title}</h1>
-          <p className="mt-3 text-muted">{task.description}</p>
+          {task.description && <p className="mt-3 whitespace-pre-line text-muted">{task.description}</p>}
           <div className="mt-5"><ActionPills actions={task.actions} /></div>
 
           <h2 className="mt-8 font-semibold">Steps</h2>
-          <TaskRunner task={task} />
+          <TaskRunner task={task} isDemo={isDemo} onChange={() => refetch()} />
         </div>
 
         <aside className="h-fit space-y-4 rounded-2xl border border-line bg-card p-6">
           <div>
-            <div className="text-sm text-muted">Reward per user</div>
-            <div className="text-3xl font-black text-accent">{task.rewardPerUser} {task.token}</div>
+            <div className="text-sm text-muted">Your reward (1% of pool)</div>
+            <div className="text-rainbow text-3xl font-black">{task.rewardPerUser.toLocaleString()} {task.token}</div>
           </div>
           <Progress value={task.filled} max={task.slots} />
           <dl className="space-y-2 border-t border-line pt-4 text-sm">
-            <div className="flex justify-between"><dt className="text-muted">Total pool</dt><dd>{(task.rewardPerUser * task.slots).toLocaleString()} {task.token}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Ends in</dt><dd>{daysLeft(task.endsAt)} days</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Target</dt><dd><a href={task.targetUrl} target="_blank" rel="noreferrer" className="text-brand hover:underline">Open on X ↗</a></dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Total pool</dt><dd>{pool.toLocaleString()} {task.token}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Ends in</dt><dd>{ended ? "Ended" : `${daysLeft(task.endsAt)} days`}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Target</dt><dd><a href={task.targetUrl} target="_blank" rel="noreferrer noopener" className="text-brand hover:underline">Open on X ↗</a></dd></div>
           </dl>
         </aside>
       </div>

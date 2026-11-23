@@ -16,7 +16,7 @@ import {
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { mainnet, base, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
+import { mainnet, base, baseSepolia, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
 
 export const projectId =
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
@@ -45,7 +45,7 @@ const connectors = connectorsForWallets(
   { appName: "xtask.fun", projectId }
 );
 
-export const chains = [base, mainnet, arbitrum, optimism, polygon, bsc] as const;
+export const chains = [base, mainnet, arbitrum, optimism, polygon, bsc, baseSepolia] as const;
 
 export const wagmiConfig = createConfig({
   connectors,
@@ -57,6 +57,7 @@ export const wagmiConfig = createConfig({
     [optimism.id]: http(),
     [polygon.id]: http(),
     [bsc.id]: http(),
+    [baseSepolia.id]: http(),
   },
   ssr: true,
 });
