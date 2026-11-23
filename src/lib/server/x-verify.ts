@@ -85,7 +85,7 @@ export async function verifyActions(api: XApi, me: string, target: XTarget, acti
 /** Basic anti-bot rules for the X account, configurable through env. */
 export function accountEligibility(user: { createdAt?: string; followers?: number }, now = Date.now()) {
   const minAgeDays = Number(process.env.X_MIN_ACCOUNT_AGE_DAYS ?? 30);
-  const minFollowers = Number(process.env.X_MIN_FOLLOWERS ?? 5);
+  const minFollowers = Number(process.env.X_MIN_FOLLOWERS ?? 50);
   if (user.createdAt && (now - new Date(user.createdAt).getTime()) / 86_400_000 < minAgeDays)
     return { ok: false, reason: `Your X account must be at least ${minAgeDays} days old.` };
   if ((user.followers ?? 0) < minFollowers)

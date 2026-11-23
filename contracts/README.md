@@ -26,7 +26,13 @@ npm test                    # 11 tests
 npm run export-abi          # regenerate ../src/lib/escrow-abi.ts after changing the contract
 ```
 
-## Deploy (Base Sepolia testnet first)
+## Deploy — easiest: from the website
+
+Open **https://YOUR-SITE/deploy**, connect your wallet, pick Base Sepolia (or Base),
+click **Generate signer wallet**, save the key, then **Deploy**. The page shows the
+env variables to paste into Vercel. Your wallet becomes the owner.
+
+## Deploy from the command line (Base Sepolia testnet first)
 
 1. Create two new wallets:
    - **deployer**: needs a little ETH for gas (Base Sepolia faucet for testnet)
