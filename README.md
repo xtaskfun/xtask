@@ -113,6 +113,9 @@ Set with `NEXT_PUBLIC_VERIFICATION_MODE`:
 | empty / `none` (default) | Connect wallet → open each step with **Go** → **Claim**. **No check**: anyone can claim once per wallet. |
 | `x` | X login required; actions are checked through the X API. |
 
+Every mode also limits claims per IP address: one IP can claim a task with at most
+`CLAIM_LIMIT_PER_IP` wallets (default 1; only a salted hash of the IP is stored, in Redis).
+
 > ⚠️ Mode `none` cannot tell whether someone really did the task. Someone with many wallets
 > can drain a pool. The contract still limits claims to one per wallet and the number of people set for the task.
 > Start with small pools.

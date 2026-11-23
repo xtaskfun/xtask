@@ -176,6 +176,10 @@ export default function TermsPage() {
               <li>Your wallet address and on-chain activity are public on the blockchain.</li>
               <li>The X handle and link you enter when creating a task are stored on-chain and shown publicly.</li>
               <li>Wallet login is handled by Privy, which processes your wallet address according to its own privacy policy.</li>
+              <li>
+                To prevent abuse we store a one-way hash of your IP address when you claim (never the address itself), and delete it a day
+                after the task ends.
+              </li>
               <li>We do not sell your personal data.</li>
             </ul>
           ),

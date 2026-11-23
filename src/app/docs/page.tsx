@@ -69,6 +69,7 @@ export default function DocsPage() {
               <h3>Good to know</h3>
               <ul>
                 <li>One claim per wallet per task, and only while the task has free slots and hasn&apos;t ended.</li>
+                <li>To stop people using many wallets, each internet connection (IP address) can claim a task only once.</li>
                 <li>
                   You pay a small network fee (gas) in ETH on the task&apos;s network to claim. Make sure your wallet has a little ETH there.
                 </li>

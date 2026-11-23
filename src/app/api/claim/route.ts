@@ -7,6 +7,7 @@ import { getStore } from "@/lib/server/store";
 import { HttpError, keys, loadOpenTask, publicClient, resolveTask, verifyForTask } from "@/lib/server/claim-flow";
 import { errorResponse, readTaskId } from "@/lib/server/http";
 import { VERIFICATION_MODE } from "@/lib/site";
+import { claimLimitPerIp, clientIp, hashIp, reserveIpSlot } from "@/lib/server/ip-limit";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,7 @@ const SIGNATURE_TTL_SECONDS = 10 * 60;
  * With NEXT_PUBLIC_VERIFICATION_MODE=x it also requires a logged-in X account, all
  * actions verified on X, and that this X account hasn't claimed with another wallet.
  * Otherwise there is no check beyond the contract's one-claim-per-wallet rule.
+ * In every mode, one IP address can claim a task with at most CLAIM_LIMIT_PER_IP wallets (default 1).
  */
 export async function POST(req: Request) {
   try {
@@ -60,7 +62,16 @@ export async function POST(req: Request) {
       }
     }
 
+    // Limit how many different wallets can claim this task from the same IP address
     const now = Math.floor(Date.now() / 1000);
+    const ipStore = getStore();
+    if (ipStore) {
+      const scope = `${escrow.chain.id}:${escrow.address.toLowerCase()}:${taskId}`;
+      const ttl = Math.max(3600, Number(task.endsAt) - now + 86_400); // forget it a day after the task ends
+      const ok = await reserveIpSlot(ipStore, scope, hashIp(clientIp(req)), wallet, claimLimitPerIp(), ttl);
+      if (!ok) throw new HttpError(429, "This task was already claimed from your network. One claim per connection.");
+    }
+
     const deadline = BigInt(Math.min(now + SIGNATURE_TTL_SECONDS, Number(task.endsAt)));
     const signature = await privateKeyToAccount(key as `0x${string}`).signTypedData({
       domain: { name: "xtask.fun", version: "1", chainId: escrow.chain.id, verifyingContract: escrow.address },
