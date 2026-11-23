@@ -18,9 +18,18 @@ export const VERIFICATION_MODE: "none" | "x" =
   process.env.NEXT_PUBLIC_VERIFICATION_MODE === "x" ? "x" : "none";
 
 /**
- * Tasks hidden from the site and the leaderboard (e.g. test tasks), as "<chainId>-<taskId>".
- * On-chain data can't be deleted; this only stops the site from showing or counting them.
+ * Reset point per network: tasks with an id up to this number are hidden from the site,
+ * the stats and the leaderboard (e.g. test tasks). On-chain data can't be deleted; this only
+ * stops the site from showing or counting them. Raise the number to reset again.
  */
-export const HIDDEN_TASKS = new Set<string>([
-  "4663-1", // test task on Robinhood Chain (23 Nov 2026)
-]);
+export const RESET_UP_TO: Record<number, number> = {
+  4663: 2, // Robinhood Chain: test tasks #1–#2 (23 Nov 2026)
+  8453: 0, // Base: nothing hidden
+};
+
+/** Single tasks to hide, as "<chainId>-<taskId>". */
+export const HIDDEN_TASKS = new Set<string>([]);
+
+export function isHiddenTask(chainId: number, taskId: bigint | number) {
+  return BigInt(taskId) <= BigInt(RESET_UP_TO[chainId] ?? 0) || HIDDEN_TASKS.has(`${chainId}-${taskId}`);
+}

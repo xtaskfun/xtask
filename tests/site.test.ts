@@ -12,3 +12,14 @@ describe("SITE_URL (used in share links)", () => {
   it("ignores a vercel.app address", async () => expect(await siteUrl("https://xtask-zeta.vercel.app/")).toBe("https://xtask.fun"));
   it("uses another custom domain", async () => expect(await siteUrl("https://app.xtask.fun/")).toBe("https://app.xtask.fun"));
 });
+
+describe("isHiddenTask (reset point)", () => {
+  it("hides Robinhood test tasks #1-#2 only", async () => {
+    vi.resetModules();
+    const { isHiddenTask } = await import("@/lib/site");
+    expect(isHiddenTask(4663, 1n)).toBe(true);
+    expect(isHiddenTask(4663, 2n)).toBe(true);
+    expect(isHiddenTask(4663, 3n)).toBe(false);
+    expect(isHiddenTask(8453, 1n)).toBe(false);
+  });
+});

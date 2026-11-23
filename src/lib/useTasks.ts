@@ -6,7 +6,7 @@ import { useReadContract, useReadContracts } from "wagmi";
 import { ESCROWS, HAS_ESCROW, escrowAbi, parseTaskKey, taskKey, type Escrow } from "./escrow";
 import { TASKS, Task, parseMeta, getTask as getDemoTask } from "./tasks";
 import { findToken } from "./tokens";
-import { HIDDEN_TASKS } from "./site";
+import { isHiddenTask } from "./site";
 
 type RawTask = {
   creator: `0x${string}`;
@@ -70,7 +70,7 @@ export function useTasks(limitPerChain = 60) {
       .flatMap((r, i) => {
         if (r.status !== "success") return [];
         const [ids, list] = r.result as readonly [readonly bigint[], readonly RawTask[]];
-        return list.map((t, j) => toTask(ESCROWS[i], ids[j], t)).filter((t) => !HIDDEN_TASKS.has(t.id));
+        return list.map((t, j) => toTask(ESCROWS[i], ids[j], t)).filter((t) => !isHiddenTask(t.onchain!.chainId, t.onchain!.taskId));
       })
       .sort((a, b) => +new Date(b.endsAt) - +new Date(a.endsAt));
   }, [q.data]);
@@ -93,7 +93,7 @@ export function useTask(key: string) {
     if (!HAS_ESCROW) return getDemoTask(key);
     if (!parsed || !q.data) return undefined;
     const t = toTask(parsed.escrow, parsed.id, q.data);
-    return HIDDEN_TASKS.has(t.id) ? undefined : t;
+    return isHiddenTask(parsed.escrow.chain.id, parsed.id) ? undefined : t;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data, key]);
 
