@@ -33,3 +33,6 @@ export const HIDDEN_TASKS = new Set<string>([]);
 export function isHiddenTask(chainId: number, taskId: bigint | number) {
   return BigInt(taskId) <= BigInt(RESET_UP_TO[chainId] ?? 0) || HIDDEN_TASKS.has(`${chainId}-${taskId}`);
 }
+
+/** Every task runs this long; after that the creator can refund unclaimed slots. */
+export const TASK_DURATION_DAYS = 30;

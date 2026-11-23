@@ -13,11 +13,10 @@ import { base } from "@/lib/chains";
 import { TOKENS, type Token } from "@/lib/tokens";
 import { parseTarget, targetSupports } from "@/lib/x/target";
 import { DEFAULT_FEE_BPS, quote, rewardForBudget } from "@/lib/fees";
+import { TASK_DURATION_DAYS } from "@/lib/site";
 
 const MAX_META_BYTES = 1024;
 
-/** Every task runs this long; after that the creator can refund unclaimed slots. */
-const TASK_DURATION_DAYS = 30;
 
 /**
  * Reads symbol() and decimals() of every listed ERC20 on its chain and keeps only the

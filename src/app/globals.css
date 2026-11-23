@@ -102,6 +102,17 @@ h1, h2, h3 {
   }
 }
 
+/* Typography inside docs / terms */
+.doc-body a { @apply text-brand underline-offset-2 hover:underline; }
+.doc-body strong { @apply font-semibold text-white; }
+.doc-body ul { @apply list-disc space-y-2 pl-5; }
+.doc-body ol { @apply list-decimal space-y-2 pl-5; }
+.doc-body h3 { @apply pt-2 text-lg font-bold text-white; }
+.doc-body code { @apply rounded bg-white/10 px-1.5 py-0.5 font-mono text-[0.85em] text-white; }
+.doc-body table { @apply w-full text-left text-sm; }
+.doc-body th { @apply border-b border-white/10 py-2 pr-4 font-medium text-white; }
+.doc-body td { @apply border-b border-white/[0.06] py-2 pr-4 align-top; }
+
 @keyframes btn-shine {
   from { left: -50%; opacity: 1; }
   to { left: 130%; opacity: 0; }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "./Logo";
 import { X_HANDLE, X_URL } from "@/lib/site";
 
@@ -9,8 +10,8 @@ export default function Footer() {
         <p>© {new Date().getFullYear()} xtask.fun — Engage on X, earn onchain.</p>
         <div className="flex gap-4">
           <a href={X_URL} target="_blank" rel="noreferrer noopener" className="hover:text-white">𝕏 @{X_HANDLE}</a>
-          <a href="#" className="hover:text-white">Docs</a>
-          <a href="#" className="hover:text-white">Terms</a>
+          <Link href="/docs" className="hover:text-white">Docs</Link>
+          <Link href="/terms" className="hover:text-white">Terms</Link>
         </div>
       </div>
     </footer>
