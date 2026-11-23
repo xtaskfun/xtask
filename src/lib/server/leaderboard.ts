@@ -4,7 +4,8 @@ import { ESCROWS, escrowAbi } from "../escrow";
 import { base } from "../chains";
 import { parseMeta } from "../tasks";
 import { findToken } from "../tokens";
-import { pointsFor, spentUsd } from "../points";
+import { STABLECOINS, pointsFor, spentUsd } from "../points";
+import { zeroAddress } from "viem";
 import { publicClient } from "./claim-flow";
 import { HIDDEN_TASKS } from "../site";
 import { taskKey } from "../escrow";
@@ -74,4 +75,41 @@ export async function buildLeaderboard(): Promise<{ rows: LeaderboardRow[]; ethU
     .slice(0, 100);
 
   return { rows, ethUsd: price, updatedAt: new Date().toISOString() };
+}
+
+export type SiteStats = { rewardsPaidUsd: number; activeTasks: number; claims: number; projects: number };
+
+/** Real numbers for the home page, read from every escrow (hidden test tasks excluded). */
+export async function buildStats(): Promise<SiteStats> {
+  const price = await ethUsd();
+  const stats: SiteStats = { rewardsPaidUsd: 0, activeTasks: 0, claims: 0, projects: 0 };
+  const creators = new Set<string>();
+  const now = BigInt(Math.floor(Date.now() / 1000));
+
+  for (const escrow of ESCROWS) {
+    const client = publicClient(escrow.chain);
+    for (let offset = 0n; ; offset += PAGE) {
+      let page;
+      try {
+        page = await client.readContract({ address: escrow.address, abi: escrowAbi, functionName: "getTasks", args: [offset, PAGE] });
+      } catch {
+        break;
+      }
+      const [ids, list] = page;
+      list.forEach((t, i) => {
+        if (HIDDEN_TASKS.has(taskKey(escrow.chain.id, ids[i]))) return;
+        creators.add(t.creator.toLowerCase());
+        stats.claims += t.claimed;
+        if (!t.refunded && t.endsAt > now && t.claimed < t.slots) stats.activeTasks += 1;
+        const token = findToken(escrow.chain.id, t.token);
+        const paid = Number(t.rewardPerUser * BigInt(t.claimed)) / 10 ** token.decimals;
+        const usd = STABLECOINS.has(token.symbol) ? paid : t.token === zeroAddress && price ? paid * price : 0;
+        stats.rewardsPaidUsd += usd;
+      });
+      if (BigInt(list.length) < PAGE) break;
+    }
+  }
+  stats.projects = creators.size;
+  stats.rewardsPaidUsd = Math.round(stats.rewardsPaidUsd * 100) / 100;
+  return stats;
 }

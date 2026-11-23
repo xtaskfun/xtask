@@ -1,16 +1,10 @@
 import Link from "next/link";
 import TrendingTasks from "@/components/TaskGrid";
+import Stats from "@/components/Stats";
 import { VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
-const STATS = [
-  { label: "Rewards paid", value: "$248K" },
-  { label: "Active tasks", value: "1,204" },
-  { label: "Hunters", value: "38K+" },
-  { label: "Projects", value: "620" },
-];
-
 const STEPS = [
-  { n: "01", title: "Connect wallet", text: "Pick from MetaMask, OKX, Trust, Phantom, Coinbase and more." },
+  { n: "01", title: "Connect wallet", text: "Pick from MetaMask, OKX, Robinhood Wallet, Coinbase and more." },
   VERIFICATION_MODE === "x"
     ? { n: "02", title: "Link your X", text: "Connect your X account so we can verify your engagement." }
     : { n: "02", title: "Pick a task", text: "Browse open campaigns and choose the rewards you like." },
@@ -27,7 +21,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute left-1/2 top-16 -z-10 h-56 w-[36rem] max-w-full -translate-x-1/2 rounded-full bg-rainbow opacity-25 blur-[110px]" />
 
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/5 px-3 py-1 text-xs text-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-rainbow" /> Live on Base, Ethereum, Arbitrum & more
+          <span className="h-1.5 w-1.5 rounded-full bg-rainbow" /> Live on Base & Robinhood Chain
         </span>
         <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
           Engage on X.<br />Earn <span className="text-rainbow">onchain</span>.
@@ -42,14 +36,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
-        {STATS.map((s) => (
-          <div key={s.label} className="bg-surface p-6 text-center">
-            <div className="text-2xl font-bold md:text-3xl">{s.value}</div>
-            <div className="mt-1 text-sm text-muted">{s.label}</div>
-          </div>
-        ))}
-      </section>
+      <Stats />
 
       {/* Featured */}
       <section className="mt-20">
