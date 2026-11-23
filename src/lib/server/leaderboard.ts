@@ -6,6 +6,8 @@ import { parseMeta } from "../tasks";
 import { findToken } from "../tokens";
 import { pointsFor, spentUsd } from "../points";
 import { publicClient } from "./claim-flow";
+import { HIDDEN_TASKS } from "../site";
+import { taskKey } from "../escrow";
 
 /** Chainlink ETH/USD on Base (8 decimals). */
 const ETH_USD_FEED = "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70" as const;
@@ -46,6 +48,7 @@ export async function buildLeaderboard(): Promise<{ rows: LeaderboardRow[]; ethU
     for (let offset = 0n; ; offset += PAGE) {
       const [ids, list] = await client.readContract({ address: escrow.address, abi: escrowAbi, functionName: "getTasks", args: [offset, PAGE] });
       list.forEach((t, i) => {
+        if (HIDDEN_TASKS.has(taskKey(escrow.chain.id, ids[i]))) return;
         const token = findToken(escrow.chain.id, t.token);
         const usd = spentUsd({ ...t, symbol: token.symbol, decimals: token.decimals }, feeBps, price);
         if (usd === null || usd <= 0) return;

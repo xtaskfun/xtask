@@ -12,3 +12,11 @@ export const X_URL = `https://x.com/${X_HANDLE}`;
  */
 export const VERIFICATION_MODE: "none" | "x" =
   process.env.NEXT_PUBLIC_VERIFICATION_MODE === "x" ? "x" : "none";
+
+/**
+ * Tasks hidden from the site and the leaderboard (e.g. test tasks), as "<chainId>-<taskId>".
+ * On-chain data can't be deleted; this only stops the site from showing or counting them.
+ */
+export const HIDDEN_TASKS = new Set<string>([
+  "4663-1", // test task on Robinhood Chain (23 Nov 2026)
+]);
