@@ -20,6 +20,8 @@ export const TOKENS: Record<number, Token[]> = {
     // Paxos Global Dollar. Address from Robinhood Chain listings; the on-chain check above
     // must still see symbol "USDG" before it can be used.
     { symbol: "USDG", address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", decimals: 6 },
+    // Official xtask.fun token
+    { symbol: "XTASK", address: "0xb77ff90493244cc301f6d9db2493d46c4ca02da9", decimals: 18 },
     native("ETH"),
   ],
   [baseSepolia.id]: [
