@@ -81,7 +81,7 @@ export default function DocsPage() {
               </table>
               <TokenBadge />
               <p>
-                Only trust this contract address — it is the same on the
+                $XTASK can also be used as a task reward. Only trust this contract address — it is the same on the
                 website and on{" "}
                 <a href={X_URL} target="_blank" rel="noreferrer noopener">
                   @{X_HANDLE}
