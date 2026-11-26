@@ -40,17 +40,6 @@ export function isHiddenTask(chainId: number, taskId: bigint | number, escrow: s
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
 export const TASK_DURATION_DAYS = 3;
 
-/** The official $XTASK token (Robinhood Chain). */
-export const XTASK_TOKEN = {
-  symbol: "XTASK",
-  name: "Xtask",
-  address: "0x8f791838f1203ec242d24bb82a4ba278748c01ea" as `0x${string}`,
-  chainId: 4663,
-  chainName: "Robinhood Chain",
-  totalSupply: "1,000,000,000",
-  explorer: "https://robinhoodchain.blockscout.com/token/0x8f791838f1203ec242d24bb82a4ba278748c01ea",
-};
-
 /** Public source code. */
 export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
 

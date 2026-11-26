@@ -4,7 +4,6 @@ import TrendingTasks from "@/components/TaskGrid";
 import Stats from "@/components/Stats";
 import HeroVisual from "@/components/HeroVisual";
 import Marquee from "@/components/Marquee";
-import TokenBadge from "@/components/TokenBadge";
 import { VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
 const STEPS = [
@@ -40,9 +39,6 @@ export default function HomePage() {
             <Link href="/create" className="btn-rainbow px-6 py-3 text-base">
               Create a task
             </Link>
-          </div>
-          <div className="mt-6 flex animate-fade-up justify-center [animation-delay:320ms] md:justify-start">
-            <TokenBadge />
           </div>
         </div>
         <div className="animate-fade-up [animation-delay:200ms]">
