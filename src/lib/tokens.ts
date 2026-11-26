@@ -20,6 +20,10 @@ export const TOKENS: Record<number, Token[]> = {
     // Paxos Global Dollar. Address from Robinhood Chain listings; the on-chain check above
     // must still see symbol "USDG" before it can be used.
     { symbol: "USDG", address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", decimals: 6 },
+    // Official xtask.fun token
+    { symbol: "XTASK", address: "0x8f791838f1203ec242d24bb82a4ba278748c01ea", decimals: 18 },
+    { symbol: "PONS", address: "0x39dbed3a2bd333467115de45665cc57f813c4571", decimals: 18 },
+    { symbol: "ORBIO", address: "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3", decimals: 18 },
     native("ETH"),
   ],
   [baseSepolia.id]: [
@@ -53,9 +57,8 @@ export const TOKENS: Record<number, Token[]> = {
 // them still show the right symbol.
 const RETIRED_TOKENS: Record<number, Token[]> = {
   [robinhood.id]: [
+    // Old XTASK contract, replaced by 0x8f79…01ea.
     { symbol: "XTASK", address: "0xb77ff90493244cc301f6d9db2493d46c4ca02da9", decimals: 18 },
-    { symbol: "PONS", address: "0x39dbed3a2bd333467115de45665cc57f813c4571", decimals: 18 },
-    { symbol: "ORBIO", address: "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3", decimals: 18 },
   ],
 };
 
