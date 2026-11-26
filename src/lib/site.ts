@@ -40,6 +40,17 @@ export function isHiddenTask(chainId: number, taskId: bigint | number, escrow: s
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
 export const TASK_DURATION_DAYS = 3;
 
+/** The official $XTASK token (Base). */
+export const XTASK_TOKEN = {
+  symbol: "XTASK",
+  name: "Xtask",
+  address: "0x7e321ff55191F5a1b364BB2f1715745bc6D5cccC" as `0x${string}`,
+  chainId: 8453,
+  chainName: "Base",
+  totalSupply: "1,000,000,000",
+  explorer: "https://basescan.org/token/0x7e321ff55191F5a1b364BB2f1715745bc6D5cccC",
+};
+
 /** Public source code. */
 export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
 
