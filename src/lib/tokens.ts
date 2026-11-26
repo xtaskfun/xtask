@@ -14,9 +14,6 @@ export const TOKENS: Record<number, Token[]> = {
   [base.id]: [
     { symbol: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
     { symbol: "USDT", address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6 },
-    // Official xtask.fun token
-    { symbol: "XTASK", address: "0x7e321ff55191F5a1b364BB2f1715745bc6D5cccC", decimals: 18 },
-    { symbol: "CLANKER", address: "0x1bc0c42215582d5A085795f4baDbaC3ff36d1Bcb", decimals: 18 },
     native("ETH"),
   ],
   [robinhood.id]: [

@@ -6,8 +6,7 @@ import { explorerUrl } from "@/lib/chains";
 import { TOKENS } from "@/lib/tokens";
 import { DEFAULT_FEE_BPS } from "@/lib/fees";
 import { POINTS_PER_USD } from "@/lib/points";
-import TokenBadge from "@/components/TokenBadge";
-import { GITHUB_URL, TASK_DURATION_DAYS, VERIFICATION_MODE, XTASK_TOKEN, X_HANDLE, X_URL } from "@/lib/site";
+import { GITHUB_URL, TASK_DURATION_DAYS, VERIFICATION_MODE, X_HANDLE, X_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Docs — xtask.fun",
@@ -42,52 +41,6 @@ export default function DocsPage() {
                 <li>People complete the task on X and claim their share straight from the contract to their wallet.</li>
                 <li>xtask.fun never holds the reward pool — the escrow smart contract does.</li>
               </ul>
-            </>
-          ),
-        },
-        {
-          id: "token",
-          title: "$XTASK token",
-          body: (
-            <>
-              <p>
-                <strong>$XTASK</strong> is the official token of xtask.fun.
-              </p>
-              <table>
-                <tbody>
-                  <tr>
-                    <td>Name / symbol</td>
-                    <td>
-                      {XTASK_TOKEN.name} / ${XTASK_TOKEN.symbol}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Network</td>
-                    <td>{XTASK_TOKEN.chainName}</td>
-                  </tr>
-                  <tr>
-                    <td>Total supply</td>
-                    <td>{XTASK_TOKEN.totalSupply}</td>
-                  </tr>
-                  <tr>
-                    <td>Contract (CA)</td>
-                    <td>
-                      <a href={XTASK_TOKEN.explorer} target="_blank" rel="noreferrer noopener">
-                        <code>{XTASK_TOKEN.address}</code>
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <TokenBadge />
-              <p>
-                $XTASK can also be used as a task reward. Only trust this contract address — it is the same on the
-                website and on{" "}
-                <a href={X_URL} target="_blank" rel="noreferrer noopener">
-                  @{X_HANDLE}
-                </a>
-                . We will never DM you a different one.
-              </p>
             </>
           ),
         },
