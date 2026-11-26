@@ -51,14 +51,3 @@ export const CLAIMS_PAUSED =
   process.env.NEXT_PUBLIC_CLAIMS_PAUSED === undefined || process.env.NEXT_PUBLIC_CLAIMS_PAUSED === ""
     ? PAUSED_BY_DEFAULT
     : process.env.NEXT_PUBLIC_CLAIMS_PAUSED === "true";
-
-/** The official $XTASK token (Robinhood Chain). */
-export const XTASK_TOKEN = {
-  symbol: "XTASK",
-  name: "Xtask",
-  address: "0xb77ff90493244cc301f6d9db2493d46c4ca02da9" as `0x${string}`,
-  chainId: 4663,
-  chainName: "Robinhood Chain",
-  totalSupply: "1,000,000,000",
-  explorer: "https://robinhoodchain.blockscout.com/token/0xb77ff90493244cc301f6d9db2493d46c4ca02da9",
-};
