@@ -28,7 +28,9 @@ export const RESET_UP_TO: Record<string, number> = {
 };
 
 /** Single tasks to hide, as "<chainId>-<taskId>". */
-export const HIDDEN_TASKS = new Set<string>([]);
+export const HIDDEN_TASKS = new Set<string>([
+  "4663-4", // paid in XTASK, which is no longer offered
+]);
 
 export function isHiddenTask(chainId: number, taskId: bigint | number, escrow: string) {
   const upTo = RESET_UP_TO[escrow.toLowerCase()] ?? 0;
