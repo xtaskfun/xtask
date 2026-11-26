@@ -22,6 +22,8 @@ export const TOKENS: Record<number, Token[]> = {
     { symbol: "USDG", address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", decimals: 6 },
     // Official xtask.fun token
     { symbol: "XTASK", address: "0xb77ff90493244cc301f6d9db2493d46c4ca02da9", decimals: 18 },
+    { symbol: "PONS", address: "0x39dbed3a2bd333467115de45665cc57f813c4571", decimals: 18 },
+    { symbol: "ORBIO", address: "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3", decimals: 18 },
     native("ETH"),
   ],
   [baseSepolia.id]: [
