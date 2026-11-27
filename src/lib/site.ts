@@ -38,6 +38,17 @@ export function isHiddenTask(chainId: number, taskId: bigint | number, escrow: s
 /** Every task runs this long; after that the creator can refund unclaimed slots. */
 export const TASK_DURATION_DAYS = 3;
 
+/** The official $XTASK token (Elysium). */
+export const XTASK_TOKEN = {
+  symbol: "XTASK",
+  name: "Xtask",
+  address: "0xe5aff314bd4c465ec6c8c23b9e93053765dab077" as `0x${string}`,
+  chainId: 99901,
+  chainName: "Elysium",
+  totalSupply: "1,000,000,000",
+  explorer: "https://elysium.kinetiq.xyz/address/0xe5aff314bd4c465ec6c8c23b9e93053765dab077",
+};
+
 /** Public source code. */
 export const GITHUB_URL = "https://github.com/xtaskfun/xtask";
 
