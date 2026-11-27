@@ -24,5 +24,7 @@ describe("leaderboard points", () => {
     expect(spentUsd(eth, 500, 2000)).toBeCloseTo(2000);
     expect(spentUsd(eth, 500, null)).toBeNull();
     expect(spentUsd({ ...base, symbol: "PEPE" }, 500, 2000)).toBeNull();
+    // HYPE is a native coin too, but must never be priced as ETH
+    expect(spentUsd({ ...eth, symbol: "HYPE" }, 500, 2000)).toBeNull();
   });
 });

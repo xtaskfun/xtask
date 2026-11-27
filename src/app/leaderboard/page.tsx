@@ -109,7 +109,7 @@ export default function LeaderboardPage() {
 
       <p className="mt-4 text-xs text-muted">
         Points = {POINTS_PER_USD} × USD spent on tasks (budget incl. platform fee, minus refunds). USDC, USDT and USDG count as $1; ETH uses
-        the Chainlink ETH/USD price{data?.ethUsd ? ` (${usd(Math.round(data.ethUsd))})` : ""}. Updates every minute.
+        the Chainlink ETH/USD price{data?.ethUsd ? ` (${usd(Math.round(data.ethUsd))})` : ""}. Other tokens earn no points yet. Updates every minute.
       </p>
     </div>
   );

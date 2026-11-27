@@ -1,13 +1,16 @@
+import { ESCROWS } from "@/lib/escrow";
+import { TOKENS } from "@/lib/tokens";
+
+// Reward tokens and network names follow whatever networks are live
+const live = ESCROWS.map((e) => e.chain);
 const ITEMS = [
   "Follow",
   "Like",
   "Repost",
   "Reply",
   "Quote",
-  "USDC",
-  "USDG",
-  "ETH",
-  "Base",
+  ...Array.from(new Set(live.flatMap((c) => (TOKENS[c.id] ?? []).map((t) => t.symbol)))),
+  ...live.map((c) => c.name),
   "Claim instantly",
 ];
 

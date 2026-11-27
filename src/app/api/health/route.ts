@@ -27,7 +27,7 @@ export async function GET() {
       try {
         const client = publicClient(e.chain);
         const onchainSigner = await client.readContract({ address: e.address, abi: escrowAbi, functionName: "signer" });
-        // The refund keeper pays gas in ETH on each network
+        // The refund keeper pays gas in each network's native coin (ETH, HYPE)
         const keeper = keeperAccount();
         const keeperEth = keeper ? Number(formatEther(await client.getBalance({ address: keeper.address }))) : null;
         return {

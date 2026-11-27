@@ -102,7 +102,7 @@ export async function buildStats(): Promise<SiteStats> {
         if (!t.refunded && t.endsAt > now && t.claimed < t.slots) stats.activeTasks += 1;
         const token = findToken(escrow.chain.id, t.token);
         const paid = Number(t.rewardPerUser * BigInt(t.claimed)) / 10 ** token.decimals;
-        const usd = STABLECOINS.has(token.symbol) ? paid : t.token === zeroAddress && price ? paid * price : 0;
+        const usd = STABLECOINS.has(token.symbol) ? paid : t.token === zeroAddress && token.symbol === "ETH" && price ? paid * price : 0;
         stats.rewardsPaidUsd += usd;
       });
       if (BigInt(list.length) < PAGE) break;

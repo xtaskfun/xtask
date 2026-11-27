@@ -1,6 +1,6 @@
 import { isAddress, type Address, type Chain } from "viem";
 import { escrowAbi } from "./escrow-abi";
-import { ESCROW_CHAINS, base, baseSepolia, robinhood } from "./chains";
+import { ESCROW_CHAINS, base, baseSepolia, elysium, robinhood } from "./chains";
 
 export { escrowAbi };
 
@@ -10,12 +10,19 @@ const addr = (v: string | undefined) => (v && isAddress(v.trim()) ? (v.trim() as
 const chainById = (id: number) => ESCROW_CHAINS.find((c) => c.id === id);
 
 // NEXT_PUBLIC_* values must be read with static names so Next.js can inline them.
+const ELYSIUM_ESCROW = addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ELYSIUM);
+const BASE_ESCROW = addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE);
+
+/** Elysium replaces Base: once its escrow is configured, Base is only used for refunds. */
+export const ON_ELYSIUM = !!ELYSIUM_ESCROW;
+
 // Per-network variables win over the original single-chain pair (first match per chain is used).
 const configured: [Chain | undefined, Address | undefined][] = [
-  [base, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE)],
+  [elysium, ELYSIUM_ESCROW],
+  [ON_ELYSIUM ? undefined : base, BASE_ESCROW],
   [baseSepolia, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA)],
   // Original single-chain setting (kept so existing deployments keep working)
-  [chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
+  [ON_ELYSIUM && Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID) === base.id ? undefined : chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
 ];
 
 /** Every escrow this site uses, one per chain. Empty = demo mode. */
@@ -28,7 +35,10 @@ export const HAS_ESCROW = ESCROWS.length > 0;
 
 /** Escrows on retired networks: hidden from the site, only used to refund ended tasks. */
 export const RETIRED_ESCROWS: Escrow[] = (
-  [[robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)]] as [Chain, Address | undefined][]
+  [
+    [robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)],
+    [base, ON_ELYSIUM ? BASE_ESCROW : undefined],
+  ] as [Chain, Address | undefined][]
 )
   .filter((e): e is [Chain, Address] => !!e[1])
   .map(([chain, address]) => ({ chain, address }));

@@ -10,10 +10,20 @@ export const robinhood = defineChain({
   blockExplorers: { default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" } },
 });
 
+/** Elysium mainnet: Kinetiq's L2 for Hyperliquid (Arbitrum Orbit, settles to HyperEVM, gas paid in HYPE). */
+export const elysium = defineChain({
+  id: 99901,
+  name: "Elysium",
+  nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.elysium.kinetiq.xyz"] } },
+  blockExplorers: { default: { name: "Elysium Explorer", url: "https://elysium.kinetiq.xyz" } },
+  contracts: { multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" } },
+});
+
 export { base, baseSepolia };
 
-/** Chains people can use on the site. */
-export const ESCROW_CHAINS = [base, baseSepolia] as const;
+/** Chains the escrow can run on. Which ones are live is decided in escrow.ts. */
+export const ESCROW_CHAINS = [elysium, base, baseSepolia] as const;
 
 /**
  * Chains that are no longer offered. Their tasks are hidden everywhere, but the keeper still

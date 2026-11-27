@@ -26,7 +26,8 @@ export function spentUsd(t: TaskForPoints, feeBps: number, ethUsd: number | null
   const refundedAmount = t.refunded ? t.rewardPerUser * BigInt(t.slots - t.claimed) : 0n;
   const spent = Number(formatUnits(total - refundedAmount, t.decimals));
   if (STABLECOINS.has(t.symbol)) return spent;
-  if (t.token === zeroAddress) return ethUsd === null ? null : spent * ethUsd;
+  // Only ETH has a price feed; other native coins (e.g. HYPE) earn no points yet
+  if (t.token === zeroAddress && t.symbol === "ETH") return ethUsd === null ? null : spent * ethUsd;
   return null;
 }
 

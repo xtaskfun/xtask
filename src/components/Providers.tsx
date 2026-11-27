@@ -5,6 +5,7 @@ import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { base } from "@/lib/chains";
+import { ESCROWS } from "@/lib/escrow";
 import { PRIVY_APP_ID, WALLETCONNECT_PROJECT_ID, chains, wagmiConfig } from "@/lib/wagmi";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -39,7 +40,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
         // External wallets only — no Privy embedded wallets are created.
         embeddedWallets: { ethereum: { createOnLogin: "off" } },
-        defaultChain: base,
+        defaultChain: ESCROWS[0]?.chain ?? base,
         supportedChains: [...chains],
         walletConnectCloudProjectId: WALLETCONNECT_PROJECT_ID,
       }}

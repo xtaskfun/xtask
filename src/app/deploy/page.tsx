@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ConnectWallet from "@/components/ConnectWallet";
 import { useAccount, useDeployContract, usePublicClient, useReadContract, useSwitchChain } from "wagmi";
-import { base, baseSepolia } from "@/lib/chains";
+import { base, baseSepolia, elysium } from "@/lib/chains";
 import { ESCROWS } from "@/lib/escrow";
 import { encodeDeployData, getAddress, isAddress, type Address, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -13,13 +13,14 @@ import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 
 const NETWORKS = [
   { chain: baseSepolia, label: "Base Sepolia", note: "Testnet — free test ETH", explorer: "https://sepolia.basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA" },
+  { chain: elysium, label: "Elysium", note: "Mainnet — real money, gas in HYPE", explorer: "https://elysium.kinetiq.xyz", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_ELYSIUM" },
   { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE" },
 ] as const;
 
 const DEPLOY_PAGE_VERSION = "v3 (gas + fee preset)";
 
 // Measured deployment cost is 1,829,885 gas; leave headroom.
-const FALLBACK_DEPLOY_GAS = 2_400_000n;
+const FALLBACK_DEPLOY_GAS = 3_000_000n; // ~2.09M measured on Elysium
 
 function CopyBox({ label, value, secret }: { label: string; value: string; secret?: boolean }) {
   const [copied, setCopied] = useState(false);

@@ -1,5 +1,6 @@
 import { zeroAddress, type Address } from "viem";
 import { base, baseSepolia, mainnet, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
+import { elysium } from "./chains";
 
 export type Token = { symbol: string; address: Address; decimals: number };
 
@@ -10,6 +11,11 @@ const native = (symbol: string): Token => ({ symbol, address: zeroAddress, decim
 // token whose on-chain values don't match this list — a guard against a wrong address.
 // To add a token: put its official contract address here (check the issuer's docs).
 export const TOKENS: Record<number, Token[]> = {
+  [elysium.id]: [
+    // Canonical USDC on Elysium (from Kinetiq's contract list)
+    { symbol: "USDC", address: "0xb47c4C8F73F009CC0C0d3f92B388d13E293F0B65", decimals: 6 },
+    native("HYPE"),
+  ],
   [base.id]: [
     { symbol: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
     { symbol: "USDT", address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6 },

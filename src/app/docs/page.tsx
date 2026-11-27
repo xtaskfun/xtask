@@ -15,6 +15,8 @@ export const metadata: Metadata = {
 
 const FEE = DEFAULT_FEE_BPS / 100;
 const checksOnX = VERIFICATION_MODE === "x";
+/** The coin gas is paid in on the live network (HYPE on Elysium, ETH on Base). */
+const GAS = ESCROWS[0]?.chain.nativeCurrency.symbol ?? "ETH";
 
 export default function DocsPage() {
   return (
@@ -71,7 +73,7 @@ export default function DocsPage() {
                 <li>One claim per wallet per task, and only while the task has free slots and hasn&apos;t ended.</li>
                 <li>To stop people using many wallets, each internet connection (IP address) can claim a task only once.</li>
                 <li>
-                  You pay a small network fee (gas) in ETH on the task&apos;s network to claim. Make sure your wallet has a little ETH there.
+                  You pay a small network fee (gas) in {GAS} to claim. Make sure your wallet has a little {GAS}.
                 </li>
                 <li>
                   {checksOnX
@@ -102,7 +104,7 @@ export default function DocsPage() {
                   <strong>number of people</strong> (1 – {MAX_SLOTS.toLocaleString("en-US")}).
                 </li>
                 <li>
-                  Tap <em>Pay &amp; publish</em>. For tokens like USDC you approve first, then pay — two wallet confirmations. For ETH it&apos;s
+                  Tap <em>Pay &amp; publish</em>. For tokens like USDC you approve first, then pay — two wallet confirmations. For {GAS} it&apos;s
                   one.
                 </li>
               </ol>
@@ -196,7 +198,7 @@ export default function DocsPage() {
               </table>
               <p>
                 Before a token can be used, the site checks its name and decimals on-chain; tokens that don&apos;t match are disabled. Gas is paid
-                in ETH.
+                in {GAS}.
               </p>
             </>
           ),
@@ -210,7 +212,7 @@ export default function DocsPage() {
                 Task creators earn <strong>{POINTS_PER_USD} points for every $1</strong> spent on tasks (budget including the fee, minus any
                 refunds).
               </li>
-              <li>USDC, USDT and USDG count as $1. ETH is valued with the Chainlink ETH/USD price on Base.</li>
+              <li>USDC, USDT and USDG count as $1. ETH is valued with the Chainlink ETH/USD price. Other tokens don&apos;t earn points yet.</li>
               <li>
                 Points currently have no cash value and are shown on the <Link href="/leaderboard">Leaderboard</Link>, updated every minute.
               </li>
@@ -255,7 +257,7 @@ export default function DocsPage() {
               <p>It proves you own the wallet and logs you in. It is free and does not move any funds.</p>
               <h3>My claim failed. Why?</h3>
               <p>
-                Usually the task is full or ended, you already claimed with this wallet, or you have no ETH for gas on that network. Try again
+                Usually the task is full or ended, you already claimed with this wallet, or you have no {GAS} for gas. Try again
                 after checking these.
               </p>
               <h3>Can I claim the same task twice?</h3>

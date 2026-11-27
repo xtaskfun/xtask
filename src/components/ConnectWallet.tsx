@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount, useSwitchChain } from "wagmi";
-import { ESCROW_CHAINS } from "@/lib/chains";
+import { ESCROWS } from "@/lib/escrow";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -34,7 +34,8 @@ export default function ConnectWallet({ full = false }: { full?: boolean }) {
     );
   }
 
-  const known = ESCROW_CHAINS.find((c) => c.id === chain?.id);
+  const live = ESCROWS.map((e) => e.chain);
+  const known = live.find((c) => c.id === chain?.id);
 
   return (
     <div className="relative" ref={ref}>
@@ -47,7 +48,7 @@ export default function ConnectWallet({ full = false }: { full?: boolean }) {
       {open && (
         <div className="absolute right-0 top-12 z-50 w-60 rounded-xl border border-white/10 bg-[#0c0c0c]/95 backdrop-blur-xl p-1 text-sm shadow-xl">
           <div className="px-3 pb-1 pt-2 text-xs uppercase tracking-wide text-muted">Network</div>
-          {ESCROW_CHAINS.map((c) => (
+          {live.map((c) => (
             <button
               key={c.id}
               disabled={isPending}
