@@ -81,7 +81,12 @@ export async function refundIfDue(escrow: (typeof ESCROWS)[number], id: bigint):
   const account = keeperAccount();
   if (!account) return null;
   const client = publicClient(escrow.chain);
-  const t = await client.readContract({ address: escrow.address, abi: escrowAbi, functionName: "getTask", args: [id] });
+  let t;
+  try {
+    t = await client.readContract({ address: escrow.address, abi: escrowAbi, functionName: "getTask", args: [id] });
+  } catch {
+    return null; // unknown task: nothing to refund
+  }
   const now = (await client.getBlock()).timestamp;
   if (t.refunded || t.endsAt >= now || t.claimed >= t.slots) return null;
   const wallet = createWalletClient({
