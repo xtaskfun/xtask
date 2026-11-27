@@ -13,7 +13,6 @@ const chainById = (id: number) => ESCROW_CHAINS.find((c) => c.id === id);
 // Per-network variables win over the original single-chain pair (first match per chain is used).
 const configured: [Chain | undefined, Address | undefined][] = [
   [base, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE)],
-  [robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)],
   [baseSepolia, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA)],
   // Original single-chain setting (kept so existing deployments keep working)
   [chainById(Number(process.env.NEXT_PUBLIC_ESCROW_CHAIN_ID || 0)), addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS)],
@@ -26,6 +25,16 @@ export const ESCROWS: Escrow[] = configured
   .map(([chain, address]) => ({ chain, address }));
 
 export const HAS_ESCROW = ESCROWS.length > 0;
+
+/** Escrows on retired networks: hidden from the site, only used to refund ended tasks. */
+export const RETIRED_ESCROWS: Escrow[] = (
+  [[robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)]] as [Chain, Address | undefined][]
+)
+  .filter((e): e is [Chain, Address] => !!e[1])
+  .map(([chain, address]) => ({ chain, address }));
+
+/** Every escrow the keeper looks after (active and retired). */
+export const ALL_ESCROWS: Escrow[] = [...ESCROWS, ...RETIRED_ESCROWS];
 export const getEscrow = (chainId: number) => ESCROWS.find((e) => e.chain.id === chainId);
 
 /** Tasks are addressed as "<chainId>-<taskId>". A bare number means the first escrow. */

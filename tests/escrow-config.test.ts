@@ -19,13 +19,19 @@ describe("escrow config", () => {
     expect(m.parseTaskKey("8453-7")).toMatchObject({ id: 7n, escrow: { address: A } });
   });
 
-  it("adds Robinhood Chain next to Base", async () => {
+  it("keeps Robinhood Chain off the site but still refunds there", async () => {
     const m = await load({ NEXT_PUBLIC_ESCROW_ADDRESS: A, NEXT_PUBLIC_ESCROW_CHAIN_ID: "8453", NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD: B });
-    expect(m.ESCROWS.map((e) => e.chain.id).sort()).toEqual([4663, 8453]);
-    expect(m.parseTaskKey("4663-3")).toMatchObject({ id: 3n, escrow: { address: B } });
+    expect(m.ESCROWS.map((e) => e.chain.id)).toEqual([8453]);
+    expect(m.parseTaskKey("4663-3")).toBeNull(); // no claims or task pages on Robinhood Chain
+    expect(m.ALL_ESCROWS.map((e) => [e.chain.id, e.address])).toEqual([[8453, A], [4663, B]]);
     expect(m.parseTaskKey("8453-3")).toMatchObject({ escrow: { address: A } });
     expect(m.parseTaskKey("10-3")).toBeNull(); // no escrow on that chain
     expect(m.parseTaskKey("abc")).toBeNull();
+  });
+
+  it("ignores the legacy pair when it points at Robinhood Chain", async () => {
+    const m = await load({ NEXT_PUBLIC_ESCROW_ADDRESS: A, NEXT_PUBLIC_ESCROW_CHAIN_ID: "4663" });
+    expect(m.ESCROWS).toEqual([]);
   });
 
   it("prefers the per-network variable when a chain is set twice", async () => {

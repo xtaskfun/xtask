@@ -14,11 +14,12 @@ describe("SITE_URL (used in share links)", () => {
 });
 
 describe("isHiddenTask", () => {
-  it("shows every task when nothing is hidden", async () => {
+  it("hides every Robinhood Chain task and nothing on Base", async () => {
     vi.resetModules();
     const { isHiddenTask } = await import("@/lib/site");
-    expect(isHiddenTask(4663, 1n, "0x3ae9e77B5c880E12F545a20825d24bcFaF1b7fAD")).toBe(false);
-    expect(isHiddenTask(4663, 4n, "0x775fd4e56E083C1A3Cf1048AC2E26382b916A02A")).toBe(false);
+    const RH = "0x775fd4e56E083C1A3Cf1048AC2E26382b916A02A";
+    expect(isHiddenTask(4663, 1n, RH)).toBe(true);
+    expect(isHiddenTask(4663, 4n, RH)).toBe(true);
     expect(isHiddenTask(8453, 1n, "0x7589703E07AcaE0a5d2D3DB346dB725a4AeEaa7D")).toBe(false);
   });
 });

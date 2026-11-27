@@ -22,7 +22,10 @@ export const VERIFICATION_MODE: "none" | "x" =
  * the stats and the leaderboard (e.g. test tasks). Keyed by contract address, so a newly deployed
  * contract starts clean. On-chain data can't be deleted; this only stops the site showing it.
  */
-export const RESET_UP_TO: Record<string, number> = {};
+export const RESET_UP_TO: Record<string, number> = {
+  // Robinhood Chain escrow: every task (#1–#4) hidden, the network is no longer offered (27 Nov 2026)
+  "0x775fd4e56e083c1a3cf1048ac2e26382b916a02a": 4,
+};
 
 /** Single tasks to hide, as "<chainId>-<taskId>". */
 export const HIDDEN_TASKS = new Set<string>([]);

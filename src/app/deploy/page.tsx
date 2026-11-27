@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ConnectWallet from "@/components/ConnectWallet";
 import { useAccount, useDeployContract, usePublicClient, useReadContract, useSwitchChain } from "wagmi";
-import { base, baseSepolia, robinhood } from "@/lib/chains";
+import { base, baseSepolia } from "@/lib/chains";
 import { ESCROWS } from "@/lib/escrow";
 import { encodeDeployData, getAddress, isAddress, type Address, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -14,7 +14,6 @@ import { errMsg } from "@/app/tasks/[id]/TaskRunner";
 const NETWORKS = [
   { chain: baseSepolia, label: "Base Sepolia", note: "Testnet — free test ETH", explorer: "https://sepolia.basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA" },
   { chain: base, label: "Base", note: "Mainnet — real money", explorer: "https://basescan.org", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_BASE" },
-  { chain: robinhood, label: "Robinhood Chain", note: "Mainnet — real money", explorer: "https://robinhoodchain.blockscout.com", envKey: "NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD" },
 ] as const;
 
 const DEPLOY_PAGE_VERSION = "v3 (gas + fee preset)";

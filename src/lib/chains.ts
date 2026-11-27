@@ -12,8 +12,14 @@ export const robinhood = defineChain({
 
 export { base, baseSepolia };
 
-/** Chains the escrow can be deployed on. */
-export const ESCROW_CHAINS = [base, robinhood, baseSepolia] as const;
+/** Chains people can use on the site. */
+export const ESCROW_CHAINS = [base, baseSepolia] as const;
+
+/**
+ * Chains that are no longer offered. Their tasks are hidden everywhere, but the keeper still
+ * refunds ended tasks there so creators get their unclaimed rewards back.
+ */
+export const RETIRED_CHAINS = [robinhood] as const;
 
 export const explorerUrl = (chainId: number) =>
-  ESCROW_CHAINS.find((c) => c.id === chainId)?.blockExplorers?.default.url ?? "https://basescan.org";
+  [...ESCROW_CHAINS, ...RETIRED_CHAINS].find((c) => c.id === chainId)?.blockExplorers?.default.url ?? "https://basescan.org";

@@ -1,7 +1,7 @@
 import "server-only";
 import { createWalletClient, http, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { ESCROWS, escrowAbi, taskKey } from "../escrow";
+import { ALL_ESCROWS, ESCROWS, escrowAbi, taskKey } from "../escrow";
 import { publicClient } from "./claim-flow";
 
 const PAGE = 200n;
@@ -32,7 +32,8 @@ export async function refundEndedTasks(): Promise<{ keeper: Address | null; resu
   const results: RefundResult[] = [];
   let due = 0;
 
-  for (const escrow of ESCROWS) {
+  // Includes retired networks, so their ended tasks are still refunded to the creators
+  for (const escrow of ALL_ESCROWS) {
     const client = publicClient(escrow.chain);
     const wallet = createWalletClient({
       account,

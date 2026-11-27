@@ -8,7 +8,6 @@ const ITEMS = [
   "USDG",
   "ETH",
   "Base",
-  "Robinhood Chain",
   "Claim instantly",
 ];
 

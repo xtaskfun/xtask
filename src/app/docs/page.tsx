@@ -195,8 +195,8 @@ export default function DocsPage() {
                 </tbody>
               </table>
               <p>
-                Before a token can be used, the site checks its name and decimals on-chain; tokens that don&apos;t match are disabled. Gas on
-                both networks is paid in ETH.
+                Before a token can be used, the site checks its name and decimals on-chain; tokens that don&apos;t match are disabled. Gas is paid
+                in ETH.
               </p>
             </>
           ),

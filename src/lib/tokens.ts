@@ -1,6 +1,5 @@
 import { zeroAddress, type Address } from "viem";
 import { base, baseSepolia, mainnet, arbitrum, optimism, polygon, bsc } from "wagmi/chains";
-import { robinhood } from "./chains";
 
 export type Token = { symbol: string; address: Address; decimals: number };
 
@@ -14,12 +13,6 @@ export const TOKENS: Record<number, Token[]> = {
   [base.id]: [
     { symbol: "USDC", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
     { symbol: "USDT", address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6 },
-    native("ETH"),
-  ],
-  [robinhood.id]: [
-    // Paxos Global Dollar. Address from Robinhood Chain listings; the on-chain check above
-    // must still see symbol "USDG" before it can be used.
-    { symbol: "USDG", address: "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", decimals: 6 },
     native("ETH"),
   ],
   [baseSepolia.id]: [
@@ -49,22 +42,11 @@ export const TOKENS: Record<number, Token[]> = {
   ],
 };
 
-// No longer offered when creating a task, but kept so tasks that were already funded with
-// them still show the right symbol.
-const RETIRED_TOKENS: Record<number, Token[]> = {
-  [robinhood.id]: [
-    { symbol: "XTASK", address: "0xb77ff90493244cc301f6d9db2493d46c4ca02da9", decimals: 18 },
-    { symbol: "XTASK", address: "0x8f791838f1203ec242d24bb82a4ba278748c01ea", decimals: 18 },
-    { symbol: "PONS", address: "0x39dbed3a2bd333467115de45665cc57f813c4571", decimals: 18 },
-    { symbol: "ORBIO", address: "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3", decimals: 18 },
-  ],
-};
 
 export function findToken(chainId: number, address: Address): Token {
   const same = (t: Token) => t.address.toLowerCase() === address.toLowerCase();
   return (
-    TOKENS[chainId]?.find(same) ??
-    RETIRED_TOKENS[chainId]?.find(same) ?? {
+    TOKENS[chainId]?.find(same) ?? {
       symbol: `${address.slice(0, 6)}…`,
       address,
       decimals: 18,

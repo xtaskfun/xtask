@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { privateKeyToAccount } from "viem/accounts";
-import { ESCROWS, escrowAbi } from "@/lib/escrow";
+import { ALL_ESCROWS, escrowAbi } from "@/lib/escrow";
 import { publicClient } from "@/lib/server/claim-flow";
 import { VERIFICATION_MODE } from "@/lib/site";
 import { keeperAccount } from "@/lib/server/keeper";
@@ -23,7 +23,7 @@ export async function GET() {
   }
 
   const escrows = await Promise.all(
-    ESCROWS.map(async (e) => {
+    ALL_ESCROWS.map(async (e) => {
       try {
         const client = publicClient(e.chain);
         const onchainSigner = await client.readContract({ address: e.address, abi: escrowAbi, functionName: "signer" });
