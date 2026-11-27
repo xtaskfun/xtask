@@ -34,15 +34,13 @@ describe("escrow config", () => {
     expect(m.ESCROWS).toEqual([]);
   });
 
-  it("switches from Base to Elysium once the Elysium escrow is set, keeping Base for refunds", async () => {
-    const before = await load({ NEXT_PUBLIC_ESCROW_ADDRESS_BASE: A });
-    expect(before.ESCROWS.map((e) => e.chain.id)).toEqual([8453]);
-    const m = await load({ NEXT_PUBLIC_ESCROW_ADDRESS_BASE: A, NEXT_PUBLIC_ESCROW_ADDRESS_ELYSIUM: B, NEXT_PUBLIC_ESCROW_ADDRESS: A, NEXT_PUBLIC_ESCROW_CHAIN_ID: "8453" });
-    expect(m.ON_ELYSIUM).toBe(true);
-    expect(m.ESCROWS.map((e) => [e.chain.id, e.address])).toEqual([[99901, B]]);
-    expect(m.parseTaskKey("99901-1")).toMatchObject({ escrow: { address: B } });
-    expect(m.parseTaskKey("8453-1")).toBeNull(); // no new claims on Base
-    expect(m.ALL_ESCROWS.map((e) => e.chain.id)).toEqual([99901, 8453]); // Base still refunded
+  it("keeps Base live and Elysium refund-only, even with the Elysium escrow configured", async () => {
+    const m = await load({ NEXT_PUBLIC_ESCROW_ADDRESS_BASE: A, NEXT_PUBLIC_ESCROW_ADDRESS_ELYSIUM: B });
+    expect(m.ON_ELYSIUM).toBe(false);
+    expect(m.ESCROWS.map((e) => [e.chain.id, e.address])).toEqual([[8453, A]]);
+    expect(m.parseTaskKey("99901-1")).toBeNull(); // no new tasks or claims on Elysium
+    expect(m.parseTaskKey("8453-1")).toMatchObject({ escrow: { address: A } });
+    expect(m.ALL_ESCROWS.map((e) => e.chain.id)).toEqual([8453, 99901]); // Elysium still refunded
   });
 
   it("prefers the per-network variable when a chain is set twice", async () => {

@@ -13,12 +13,17 @@ const chainById = (id: number) => ESCROW_CHAINS.find((c) => c.id === id);
 const ELYSIUM_ESCROW = addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ELYSIUM);
 const BASE_ESCROW = addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE);
 
-/** Elysium replaces Base: once its escrow is configured, Base is only used for refunds. */
-export const ON_ELYSIUM = !!ELYSIUM_ESCROW;
+/**
+ * Which network new tasks and claims use. The other one (if configured) is only used to
+ * refund ended tasks. Switch to "elysium" to move the site to Elysium again.
+ */
+const ACTIVE_NETWORK = "base" as "base" | "elysium";
+
+export const ON_ELYSIUM = ACTIVE_NETWORK === "elysium" && !!ELYSIUM_ESCROW;
 
 // Per-network variables win over the original single-chain pair (first match per chain is used).
 const configured: [Chain | undefined, Address | undefined][] = [
-  [elysium, ELYSIUM_ESCROW],
+  [ON_ELYSIUM ? elysium : undefined, ELYSIUM_ESCROW],
   [ON_ELYSIUM ? undefined : base, BASE_ESCROW],
   [baseSepolia, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE_SEPOLIA)],
   // Original single-chain setting (kept so existing deployments keep working)
@@ -38,6 +43,7 @@ export const RETIRED_ESCROWS: Escrow[] = (
   [
     [robinhood, addr(process.env.NEXT_PUBLIC_ESCROW_ADDRESS_ROBINHOOD)],
     [base, ON_ELYSIUM ? BASE_ESCROW : undefined],
+    [elysium, ON_ELYSIUM ? undefined : ELYSIUM_ESCROW],
   ] as [Chain, Address | undefined][]
 )
   .filter((e): e is [Chain, Address] => !!e[1])
